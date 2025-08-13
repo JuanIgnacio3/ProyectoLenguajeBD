@@ -1,4 +1,4 @@
--- Vista de Mascotas Disponibles para Adopci�n
+-- Vista de Mascotas Disponibles para Adopción
 CREATE OR REPLACE VIEW vista_mascotas_disponibles AS
 SELECT 
     m.id,
@@ -18,7 +18,7 @@ WHERE
 ORDER BY 
     m.nombre;
     
--- Vista de Campa�as Activas con Progreso
+-- Vista de Campañas Activas con Progreso
 CREATE OR REPLACE VIEW vista_campanas_activas AS
 SELECT 
     c.id,
@@ -32,9 +32,9 @@ SELECT
     u.nombre || ' ' || u.apellido AS responsable,
     u.telefono AS telefono_contacto
 FROM 
-    Campa�as c
+    Campañas c
 LEFT JOIN 
-    DonacionesCampa�as d ON c.id = d.campa�a
+    DonacionesCampañas d ON c.id = d.campaña
 JOIN 
     Usuarios u ON c.usuario = u.id
 WHERE 
@@ -45,7 +45,7 @@ GROUP BY
 ORDER BY 
     c.fechaFin;
     
---Vista de Historial M�dico Completo de Mascotas
+--Vista de Historial Médico Completo de Mascotas
 CREATE OR REPLACE VIEW vista_historial_medico AS
 SELECT 
     m.id AS mascota_id,
@@ -99,7 +99,7 @@ GROUP BY
 ORDER BY 
     u.nombre, u.apellido;
     
---Vista de Eventos Pr�ximos con Asistencia
+--Vista de Eventos Próximos con Asistencia
 CREATE OR REPLACE VIEW vista_eventos_proximos AS
 SELECT 
     e.id AS evento_id,
@@ -123,3 +123,51 @@ WHERE
     e.fecha >= TRUNC(SYSDATE) - 7  -- Hace 7 dias y los futuros
 ORDER BY 
     e.fecha;
+
+-- Adopciones con detalle
+CREATE OR REPLACE VIEW vista_adopciones_detalle AS
+SELECT a.id AS adopcion_id,
+       a.fecha,
+       u.nombre||' '||u.apellido AS adoptante,
+       m.nombre AS mascota,
+       m.raza,
+       m.edad
+  FROM Adopciones a
+  JOIN Usuarios u ON u.id = a.usuario
+  JOIN Mascotas m ON m.id = a.mascota
+ ORDER BY a.fecha DESC;
+
+-- Mascotas con su última atención médica
+CREATE OR REPLACE VIEW vista_mascotas_ultima_consulta AS
+SELECT m.id AS mascota_id,
+       m.nombre,
+       m.raza,
+       ( SELECT MAX(h.fecha) FROM HistorialMedico h WHERE h.mascota = m.id ) AS ultima_fecha
+  FROM Mascotas m;
+
+-- Donaciones por campaña (resumen)
+CREATE OR REPLACE VIEW vista_donaciones_por_campana AS
+SELECT c.id AS campana_id,
+       c.nombre,
+       NVL(SUM(d.cantidad),0) AS total_recaudado,
+       COUNT(d.id) AS cant_donaciones
+  FROM Campanas c
+  LEFT JOIN DonacionesCampanas d ON d.campaña = c.id
+ GROUP BY c.id, c.nombre;
+
+-- Inventario por vencer (<= 30 días)
+CREATE OR REPLACE VIEW vista_inventario_por_vencer AS
+SELECT i.*
+  FROM Inventario i
+ WHERE i.fechaCaducidad IS NOT NULL
+   AND i.fechaCaducidad <= TRUNC(SYSDATE)+30
+ ORDER BY i.fechaCaducidad;
+
+-- Resumen por usuario (mascotas, reportes, adopciones)
+CREATE OR REPLACE VIEW vista_usuarios_resumen AS
+SELECT u.id,
+       u.nombre||' '||u.apellido AS usuario,
+       (SELECT COUNT(*) FROM Mascotas  m WHERE m.usuario=u.id) AS mascotas_registradas,
+       (SELECT COUNT(*) FROM Reportes  r WHERE r.usuario=u.id) AS reportes,
+       (SELECT COUNT(*) FROM Adopciones a WHERE a.usuario=u.id) AS adopciones
+  FROM Usuarios u;

@@ -1,9 +1,12 @@
 -- Tablas principales
+
+--1. Tabla Roles
 CREATE TABLE Roles (
     id NUMBER PRIMARY KEY,
     nombre VARCHAR2(50) NOT NULL CHECK (nombre IN ('Administrador', 'Usuario', 'Voluntario'))
 );
 
+--2. Tabla Usuarios
 CREATE TABLE Usuarios (
     id NUMBER PRIMARY KEY,
     nombre VARCHAR2(100) NOT NULL CHECK (REGEXP_LIKE(nombre, '^[A-Z�����][a-z�����\s''-]+$')),
@@ -15,6 +18,7 @@ CREATE TABLE Usuarios (
     CONSTRAINT fk_usuario_rol FOREIGN KEY (rol) REFERENCES Roles(id)
 );
 
+--3. Tabla Mascotas
 CREATE TABLE Mascotas (
     id NUMBER PRIMARY KEY,
     nombre VARCHAR2(100) NOT NULL,
@@ -27,6 +31,7 @@ CREATE TABLE Mascotas (
     CONSTRAINT fk_mascota_usuario FOREIGN KEY (usuario) REFERENCES Usuarios(id)
 );
 
+--4. Tabla HistorialMedico
 CREATE TABLE HistorialMedico (
     id NUMBER PRIMARY KEY,
     mascota NUMBER NOT NULL,
@@ -39,6 +44,7 @@ CREATE TABLE HistorialMedico (
     CONSTRAINT fk_historial_mascota FOREIGN KEY (mascota) REFERENCES Mascotas(id)
 );
 
+--5. Tabla Adopciones
 CREATE TABLE Adopciones (
     id NUMBER PRIMARY KEY,
     fecha DATE NOT NULL,
@@ -49,6 +55,7 @@ CREATE TABLE Adopciones (
     CONSTRAINT uk_adopcion_mascota UNIQUE (mascota) -- Una mascota solo puede ser adoptada una vez
 );
 
+--6. Tabla Reportes
 CREATE TABLE Reportes (
     id NUMBER PRIMARY KEY,
     fecha DATE NOT NULL,
@@ -62,7 +69,8 @@ CREATE TABLE Reportes (
     CONSTRAINT fk_reporte_mascota FOREIGN KEY (mascota) REFERENCES Mascotas(id)
 );
 
-CREATE TABLE Campa�as (
+--7. Tabla Campañas
+CREATE TABLE Campañas (
     id NUMBER PRIMARY KEY,
     nombre VARCHAR2(100) NOT NULL,
     descripcion VARCHAR2(500) NOT NULL,
@@ -71,19 +79,21 @@ CREATE TABLE Campa�as (
     objetivo NUMBER NOT NULL,
     estado VARCHAR2(20) NOT NULL CHECK (estado IN ('Activa', 'Inactiva')),
     usuario NUMBER NOT NULL,
-    CONSTRAINT fk_campa�a_usuario FOREIGN KEY (usuario) REFERENCES Usuarios(id)
+    CONSTRAINT fk_campaña_usuario FOREIGN KEY (usuario) REFERENCES Usuarios(id)
 );
 
-CREATE TABLE DonacionesCampa�as (
+--8. Tabla DonacionesCampañas
+CREATE TABLE DonacionesCampañas (
     id NUMBER PRIMARY KEY,
     fecha DATE NOT NULL,
     cantidad NUMBER NOT NULL,
     usuario NUMBER NOT NULL,
-    campa�a NUMBER NOT NULL,
+    campaña NUMBER NOT NULL,
     CONSTRAINT fk_donacion_usuario FOREIGN KEY (usuario) REFERENCES Usuarios(id),
-    CONSTRAINT fk_donacion_campa�a FOREIGN KEY (campa�a) REFERENCES Campa�as(id)
+    CONSTRAINT fk_donacion_campaña FOREIGN KEY (campaña) REFERENCES Campañas(id)
 );
 
+--9. Tabla DonacionesCampañas
 CREATE TABLE Inventario (
     id NUMBER PRIMARY KEY,
     nombre VARCHAR2(100) NOT NULL,
@@ -92,9 +102,10 @@ CREATE TABLE Inventario (
     fechaIngreso DATE NOT NULL,
     fechaCaducidad DATE,
     proveedor VARCHAR2(100) NOT NULL,
-    fuente VARCHAR2(20) NOT NULL CHECK (fuente IN ('Compra', 'Donaci�n'))
+    fuente VARCHAR2(20) NOT NULL CHECK (fuente IN ('Compra', 'Donación'))
 );
 
+--10. Tabla Eventos
 CREATE TABLE Eventos (
     id NUMBER PRIMARY KEY,
     nombre VARCHAR2(100) NOT NULL,
@@ -107,6 +118,7 @@ CREATE TABLE Eventos (
     CONSTRAINT fk_evento_responsable FOREIGN KEY (responsable) REFERENCES Usuarios(id)
 );
 
+--11. Tabla EventosAsistencia
 CREATE TABLE EventosAsistencia (
     id NUMBER PRIMARY KEY,
     evento NUMBER NOT NULL,
@@ -116,6 +128,7 @@ CREATE TABLE EventosAsistencia (
     CONSTRAINT uk_asistencia_evento_usuario UNIQUE (evento, usuario) -- Un usuario solo puede asistir una vez a un evento
 );
 
+--12. Tabla Voluntarios
 CREATE TABLE Voluntarios (
     id NUMBER PRIMARY KEY,
     nombre VARCHAR2(100) NOT NULL,
@@ -127,7 +140,7 @@ CREATE TABLE Voluntarios (
     CONSTRAINT fk_voluntario_usuario FOREIGN KEY (usuario) REFERENCES Usuarios(id)
 );
 
--- Tabla para las actividades de los voluntarios (relaci�n muchos a muchos)
+--13. Tabla para las actividades de los voluntarios (relación muchos a muchos)
 CREATE TABLE VoluntariosActividades (
     voluntario_id NUMBER,
     actividad VARCHAR2(100),
@@ -135,23 +148,23 @@ CREATE TABLE VoluntariosActividades (
     CONSTRAINT fk_va_voluntario FOREIGN KEY (voluntario_id) REFERENCES Voluntarios(id)
 );
 
--- Tabla para contadores (equivalente a la colecci�n Counters en MongoDB)
+--14. Tabla para contadores (equivalente a la colección Counters en MongoDB)
 CREATE TABLE Contadores (
     id VARCHAR2(50) PRIMARY KEY,
     seq NUMBER NOT NULL
 );
 
--- �ndices adicionales
+--Índices adicionales
 CREATE INDEX idx_usuarios_email ON Usuarios(email);
 CREATE INDEX idx_mascotas_nombre ON Mascotas(nombre);
 CREATE INDEX idx_mascotas_estado ON Mascotas(estado);
 CREATE INDEX idx_historial_mascota ON HistorialMedico(mascota);
 CREATE INDEX idx_adopciones_usuario ON Adopciones(usuario);
 CREATE INDEX idx_reportes_usuario ON Reportes(usuario);
-CREATE INDEX idx_campa�as_nombre ON Campa�as(nombre);
-CREATE INDEX idx_campa�as_estado ON Campa�as(estado);
-CREATE INDEX idx_donaciones_usuario ON DonacionesCampa�as(usuario);
-CREATE INDEX idx_donaciones_campa�a ON DonacionesCampa�as(campa�a);
+CREATE INDEX idx_campañas_nombre ON Campañas(nombre);
+CREATE INDEX idx_campañas_estado ON Campañas(estado);
+CREATE INDEX idx_donaciones_usuario ON DonacionesCampañas(usuario);
+CREATE INDEX idx_donaciones_campaña ON DonacionesCampañas(campaña);
 CREATE INDEX idx_inventario_nombre ON Inventario(nombre);
 CREATE INDEX idx_inventario_fuente ON Inventario(fuente);
 CREATE INDEX idx_eventos_nombre ON Eventos(nombre);
@@ -161,14 +174,14 @@ CREATE INDEX idx_asistencia_usuario ON EventosAsistencia(usuario);
 CREATE INDEX idx_voluntarios_usuario ON Voluntarios(usuario);
 CREATE INDEX idx_voluntarios_estado ON Voluntarios(estado);
 
--- Secuencias para autoincrementales (reemplazo de los contadores de MongoDB)
+--Secuencias para autoincrementales (reemplazo de los contadores de MongoDB)
 CREATE SEQUENCE seq_roles START WITH 4;
 CREATE SEQUENCE seq_usuarios START WITH 4;
 CREATE SEQUENCE seq_mascotas START WITH 7;
 CREATE SEQUENCE seq_historial_medico START WITH 4;
 CREATE SEQUENCE seq_adopciones START WITH 4;
 CREATE SEQUENCE seq_reportes START WITH 5;
-CREATE SEQUENCE seq_campa�as START WITH 4;
+CREATE SEQUENCE seq_campañas START WITH 4;
 CREATE SEQUENCE seq_donaciones START WITH 4;
 CREATE SEQUENCE seq_inventario START WITH 4;
 CREATE SEQUENCE seq_eventos START WITH 4;

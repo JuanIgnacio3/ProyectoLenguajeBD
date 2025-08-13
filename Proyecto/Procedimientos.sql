@@ -1,4 +1,4 @@
---Procedimientos para Mascotas
+--1. Procedimientos para Mascotas
 -- Crear mascota con secuencia
 CREATE OR REPLACE PROCEDURE crear_mascota (
     p_nombre      IN VARCHAR2,
@@ -13,7 +13,7 @@ CREATE OR REPLACE PROCEDURE crear_mascota (
 BEGIN
     -- Validar estado
     IF p_estado NOT IN ('Disponible', 'Adoptado') THEN
-        RAISE_APPLICATION_ERROR(-20001, 'Estado de mascota no v·lido');
+        RAISE_APPLICATION_ERROR(-20001, 'Estado de mascota no v√°lido');
     END IF;
     
     -- Obtener siguiente ID de la secuencia
@@ -28,20 +28,20 @@ EXCEPTION
 END;
 /
 
--- Leer mascotas con m·s detalles
+-- Leer mascotas con m√°s detalles
 CREATE OR REPLACE PROCEDURE listar_mascotas (
     p_cursor OUT SYS_REFCURSOR
 ) AS
 BEGIN
     OPEN p_cursor FOR
-    SELECT m.id, m.nombre, m.raza, m.edad, m.estado, u.nombre AS dueÒo
+    SELECT m.id, m.nombre, m.raza, m.edad, m.estado, u.nombre AS dueÔøΩo
     FROM Mascotas m
     JOIN Usuarios u ON m.usuario = u.id
     ORDER BY m.nombre;
 END;
 /
 
--- Leer mascota especÌfica
+-- Leer mascota espec√≠fica
 CREATE OR REPLACE PROCEDURE obtener_mascota (
     p_id IN NUMBER,
     p_cursor OUT SYS_REFCURSOR
@@ -77,7 +77,7 @@ BEGIN
     
     -- Validar estado
     IF p_estado NOT IN ('Disponible', 'Adoptado') THEN
-        RAISE_APPLICATION_ERROR(-20001, 'Estado de mascota no v·lido');
+        RAISE_APPLICATION_ERROR(-20001, 'Estado de mascota no vÔøΩlido');
     END IF;
     
     UPDATE Mascotas
@@ -91,12 +91,12 @@ BEGIN
     WHERE id = p_id;
     
     IF SQL%ROWCOUNT = 0 THEN
-        RAISE_APPLICATION_ERROR(-20004, 'No se actualizÛ ning˙n registro');
+        RAISE_APPLICATION_ERROR(-20004, 'No se actualizÔøΩ ningÔøΩn registro');
     END IF;
 END;
 /
 
--- Eliminar mascota con verificaciÛn
+-- Eliminar mascota con verificaci√≥n
 CREATE OR REPLACE PROCEDURE eliminar_mascota (
     p_id IN NUMBER
 ) AS
@@ -108,25 +108,25 @@ BEGIN
         RAISE_APPLICATION_ERROR(-20003, 'Mascota no encontrada');
     END IF;
     
-    -- Verificar si la mascota est· en adopciones
+    -- Verificar si la mascota est√° en adopciones
     SELECT COUNT(*) INTO v_count FROM Adopciones WHERE mascota = p_id;
     IF v_count > 0 THEN
-        RAISE_APPLICATION_ERROR(-20005, 'No se puede eliminar mascota con adopciÛn registrada');
+        RAISE_APPLICATION_ERROR(-20005, 'No se puede eliminar mascota con adopciÔøΩn registrada');
     END IF;
     
-    -- Eliminar primero el historial mÈdico si existe
+    -- Eliminar primero el historial m√©dico si existe
     DELETE FROM HistorialMedico WHERE mascota = p_id;
     
     DELETE FROM Mascotas WHERE id = p_id;
     
     IF SQL%ROWCOUNT = 0 THEN
-        RAISE_APPLICATION_ERROR(-20006, 'No se eliminÛ ning˙n registro');
+        RAISE_APPLICATION_ERROR(-20006, 'No se eliminÔøΩ ningÔøΩn registro');
     END IF;
 END;
 /
 
---Procedimientos para CampaÒas
--- Crear campaÒa con secuencia
+--2. Procedimientos para Campa√±as
+-- Crear campa√±a con secuencia
 CREATE OR REPLACE PROCEDURE crear_campana (
     p_nombre       IN VARCHAR2,
     p_descripcion  IN VARCHAR2,
@@ -140,7 +140,7 @@ CREATE OR REPLACE PROCEDURE crear_campana (
 BEGIN
     -- Validar estado
     IF p_estado NOT IN ('Activa', 'Inactiva') THEN
-        RAISE_APPLICATION_ERROR(-20011, 'Estado de campaÒa no v·lido');
+        RAISE_APPLICATION_ERROR(-20011, 'Estado de campaÔøΩa no vÔøΩlido');
     END IF;
     
     -- Validar fechas
@@ -149,14 +149,14 @@ BEGIN
     END IF;
     
     -- Obtener siguiente ID de la secuencia
-    SELECT seq_campaÒas.NEXTVAL INTO p_id FROM dual;
+    SELECT seq_campaÔøΩas.NEXTVAL INTO p_id FROM dual;
     
-    INSERT INTO CampaÒas (id, nombre, descripcion, fechainicio, fechafin, objetivo, estado, usuario)
+    INSERT INTO CampaÔøΩas (id, nombre, descripcion, fechainicio, fechafin, objetivo, estado, usuario)
     VALUES (p_id, p_nombre, p_descripcion, p_fechainicio, p_fechafin, p_objetivo, p_estado, p_usuario);
 END;
 /
 
--- Listar campaÒas con cursor
+-- Listar campa√±as con cursor
 CREATE OR REPLACE PROCEDURE listar_campanas (
     p_cursor OUT SYS_REFCURSOR
 ) AS
@@ -164,14 +164,14 @@ BEGIN
     OPEN p_cursor FOR
     SELECT c.id, c.nombre, c.estado, c.fechainicio, c.fechafin, 
            c.objetivo, u.nombre AS responsable,
-           (SELECT NVL(SUM(d.cantidad), 0) FROM DonacionesCampaÒas d WHERE d.campaÒa = c.id) AS recaudado
-    FROM CampaÒas c
+           (SELECT NVL(SUM(d.cantidad), 0) FROM DonacionesCampa√±as d WHERE d.campa√±a = c.id) AS recaudado
+    FROM Campa√±as c
     JOIN Usuarios u ON c.usuario = u.id
     ORDER BY c.fechainicio DESC;
 END;
 /
 
--- Actualizar campaÒa con validaciones
+-- Actualizar campa√±a con validaciones
 CREATE OR REPLACE PROCEDURE actualizar_campana (
     p_id           IN NUMBER,
     p_nombre       IN VARCHAR2,
@@ -184,15 +184,15 @@ CREATE OR REPLACE PROCEDURE actualizar_campana (
 ) AS
     v_count NUMBER;
 BEGIN
-    -- Verificar que la campaÒa existe
-    SELECT COUNT(*) INTO v_count FROM CampaÒas WHERE id = p_id;
+    -- Verificar que la campa√±a existe
+    SELECT COUNT(*) INTO v_count FROM Campa√±as WHERE id = p_id;
     IF v_count = 0 THEN
-        RAISE_APPLICATION_ERROR(-20013, 'CampaÒa no encontrada');
+        RAISE_APPLICATION_ERROR(-20013, 'Campa√±a no encontrada');
     END IF;
     
     -- Validar estado
     IF p_estado NOT IN ('Activa', 'Inactiva') THEN
-        RAISE_APPLICATION_ERROR(-20011, 'Estado de campaÒa no v·lido');
+        RAISE_APPLICATION_ERROR(-20011, 'Estado de campa√±a no v√°lido');
     END IF;
     
     -- Validar fechas
@@ -200,7 +200,7 @@ BEGIN
         RAISE_APPLICATION_ERROR(-20012, 'Fecha de inicio no puede ser mayor que fecha de fin');
     END IF;
     
-    UPDATE CampaÒas
+    UPDATE Campa√±as
     SET nombre = p_nombre,
         descripcion = p_descripcion,
         fechainicio = p_fechainicio,
@@ -211,38 +211,38 @@ BEGIN
     WHERE id = p_id;
     
     IF SQL%ROWCOUNT = 0 THEN
-        RAISE_APPLICATION_ERROR(-20014, 'No se actualizÛ ning˙n registro');
+        RAISE_APPLICATION_ERROR(-20014, 'No se actualiz√≥ ning√∫n registro');
     END IF;
 END;
 /
 
--- Eliminar campaÒa con verificaciÛn
+-- Eliminar campa√±a con verificaci√≥n
 CREATE OR REPLACE PROCEDURE eliminar_campana (
     p_id IN NUMBER
 ) AS
     v_count NUMBER;
 BEGIN
-    -- Verificar que la campaÒa existe
-    SELECT COUNT(*) INTO v_count FROM CampaÒas WHERE id = p_id;
+    -- Verificar que la campa√±a existe
+    SELECT COUNT(*) INTO v_count FROM Campa√±as WHERE id = p_id;
     IF v_count = 0 THEN
-        RAISE_APPLICATION_ERROR(-20013, 'CampaÒa no encontrada');
+        RAISE_APPLICATION_ERROR(-20013, 'Campa√±a no encontrada');
     END IF;
     
     -- Verificar si tiene donaciones asociadas
-    SELECT COUNT(*) INTO v_count FROM DonacionesCampaÒas WHERE campaÒa = p_id;
+    SELECT COUNT(*) INTO v_count FROM DonacionesCampa√±as WHERE campa√±a = p_id;
     IF v_count > 0 THEN
-        RAISE_APPLICATION_ERROR(-20015, 'No se puede eliminar campaÒa con donaciones registradas');
+        RAISE_APPLICATION_ERROR(-20015, 'No se puede eliminar campa√±a con donaciones registradas');
     END IF;
     
-    DELETE FROM CampaÒas WHERE id = p_id;
+    DELETE FROM CampaÔøΩas WHERE id = p_id;
     
     IF SQL%ROWCOUNT = 0 THEN
-        RAISE_APPLICATION_ERROR(-20016, 'No se eliminÛ ning˙n registro');
+        RAISE_APPLICATION_ERROR(-20016, 'No se elimin√≥ ning√∫n registro');
     END IF;
 END;
 /
 
---Procedimientos para Usuarios
+--3. Procedimientos para Usuarios
 -- Crear usuario con secuencia y validaciones
 CREATE OR REPLACE PROCEDURE crear_usuario (
     p_nombre   IN VARCHAR2,
@@ -258,12 +258,12 @@ BEGIN
     -- Verificar si el email ya existe
     SELECT COUNT(*) INTO v_email_count FROM Usuarios WHERE email = p_email;
     IF v_email_count > 0 THEN
-        RAISE_APPLICATION_ERROR(-20021, 'El email ya est· registrado');
+        RAISE_APPLICATION_ERROR(-20021, 'El email ya est√° registrado');
     END IF;
     
     -- Validar rol
     IF p_rol NOT IN (1, 2, 3) THEN
-        RAISE_APPLICATION_ERROR(-20022, 'Rol de usuario no v·lido');
+        RAISE_APPLICATION_ERROR(-20022, 'Rol de usuario no v√°lido');
     END IF;
     
     -- Obtener siguiente ID de la secuencia
@@ -293,7 +293,7 @@ BEGIN
 END;
 /
 
--- Obtener usuario especÌfico
+-- Obtener usuario espec√≠fico
 CREATE OR REPLACE PROCEDURE obtener_usuario (
     p_id IN NUMBER,
     p_cursor OUT SYS_REFCURSOR
@@ -337,12 +337,12 @@ BEGIN
     WHERE email = p_email AND id != p_id;
     
     IF v_email_count > 0 THEN
-        RAISE_APPLICATION_ERROR(-20021, 'El email ya est· registrado por otro usuario');
+        RAISE_APPLICATION_ERROR(-20021, 'El email ya est√° registrado por otro usuario');
     END IF;
     
     -- Validar rol
     IF p_rol NOT IN (1, 2, 3) THEN
-        RAISE_APPLICATION_ERROR(-20022, 'Rol de usuario no v·lido');
+        RAISE_APPLICATION_ERROR(-20022, 'Rol de usuario no v√°lido');
     END IF;
     
     -- Obtener rol actual para ver si cambia a/de voluntario
@@ -371,7 +371,7 @@ BEGIN
 END;
 /
 
--- Eliminar usuario con verificaciÛn
+-- Eliminar usuario con verificaci√≥n
 CREATE OR REPLACE PROCEDURE eliminar_usuario (
     p_id IN NUMBER
 ) AS
@@ -389,10 +389,10 @@ BEGIN
         RAISE_APPLICATION_ERROR(-20024, 'No se puede eliminar usuario con mascotas registradas');
     END IF;
     
-    -- Verificar si tiene campaÒas creadas
-    SELECT COUNT(*) INTO v_count FROM CampaÒas WHERE usuario = p_id;
+    -- Verificar si tiene campa√±as creadas
+    SELECT COUNT(*) INTO v_count FROM Campa√±as WHERE usuario = p_id;
     IF v_count > 0 THEN
-        RAISE_APPLICATION_ERROR(-20025, 'No se puede eliminar usuario con campaÒas creadas');
+        RAISE_APPLICATION_ERROR(-20025, 'No se puede eliminar usuario con campa√±as creadas');
     END IF;
     
     -- Verificar si tiene adopciones
@@ -405,14 +405,14 @@ BEGIN
     DELETE FROM Voluntarios WHERE usuario = p_id;
     DELETE FROM EventosAsistencia WHERE usuario = p_id;
     DELETE FROM Reportes WHERE usuario = p_id;
-    DELETE FROM DonacionesCampaÒas WHERE usuario = p_id;
+    DELETE FROM DonacionesCampa√±as WHERE usuario = p_id;
     
     -- Finalmente eliminar el usuario
     DELETE FROM Usuarios WHERE id = p_id;
 END;
 /
 
---Procedimientos para Eventos
+--4. Procedimientos para Eventos
 -- Crear evento con secuencia
 CREATE OR REPLACE PROCEDURE crear_evento (
     p_nombre       IN VARCHAR2,
@@ -428,12 +428,12 @@ CREATE OR REPLACE PROCEDURE crear_evento (
 BEGIN
     -- Validar tipo
     IF p_tipo NOT IN ('Presencial', 'Virtual') THEN
-        RAISE_APPLICATION_ERROR(-20031, 'Tipo de evento no v·lido');
+        RAISE_APPLICATION_ERROR(-20031, 'Tipo de evento no v√°lido');
     END IF;
     
     -- Validar estado
     IF p_estado NOT IN ('En curso', 'Planificado', 'Finalizado') THEN
-        RAISE_APPLICATION_ERROR(-20032, 'Estado de evento no v·lido');
+        RAISE_APPLICATION_ERROR(-20032, 'Estado de evento no v√°lido');
     END IF;
     
     -- Verificar que el responsable existe
@@ -465,7 +465,7 @@ BEGIN
 END;
 /
 
--- Obtener evento especÌfico
+-- Obtener evento espec√≠fico
 CREATE OR REPLACE PROCEDURE obtener_evento (
     p_id IN NUMBER,
     p_cursor OUT SYS_REFCURSOR
@@ -504,12 +504,12 @@ BEGIN
     
     -- Validar tipo
     IF p_tipo NOT IN ('Presencial', 'Virtual') THEN
-        RAISE_APPLICATION_ERROR(-20031, 'Tipo de evento no v·lido');
+        RAISE_APPLICATION_ERROR(-20031, 'Tipo de evento no v√°lido');
     END IF;
     
     -- Validar estado
     IF p_estado NOT IN ('En curso', 'Planificado', 'Finalizado') THEN
-        RAISE_APPLICATION_ERROR(-20032, 'Estado de evento no v·lido');
+        RAISE_APPLICATION_ERROR(-20032, 'Estado de evento no v√°lido');
     END IF;
     
     -- Verificar que el responsable existe
@@ -529,12 +529,12 @@ BEGIN
     WHERE id = p_id;
     
     IF SQL%ROWCOUNT = 0 THEN
-        RAISE_APPLICATION_ERROR(-20035, 'No se actualizÛ ning˙n registro');
+        RAISE_APPLICATION_ERROR(-20035, 'No se actualiz√≥ ning√∫n registro');
     END IF;
 END;
 /
 
--- Eliminar evento con verificaciÛn
+-- Eliminar evento con verificaci√≥n
 CREATE OR REPLACE PROCEDURE eliminar_evento (
     p_id IN NUMBER
 ) AS
@@ -552,7 +552,7 @@ BEGIN
     DELETE FROM Eventos WHERE id = p_id;
     
     IF SQL%ROWCOUNT = 0 THEN
-        RAISE_APPLICATION_ERROR(-20036, 'No se eliminÛ ning˙n registro');
+        RAISE_APPLICATION_ERROR(-20036, 'No se elimin√≥ ning√∫n registro');
     END IF;
 END;
 /
@@ -577,13 +577,13 @@ BEGIN
         RAISE_APPLICATION_ERROR(-20023, 'Usuario no encontrado');
     END IF;
     
-    -- Verificar si ya est· registrado
+    -- Verificar si ya estÔøΩ registrado
     SELECT COUNT(*) INTO v_count 
     FROM EventosAsistencia 
     WHERE evento = p_evento AND usuario = p_usuario;
     
     IF v_count > 0 THEN
-        RAISE_APPLICATION_ERROR(-20037, 'El usuario ya est· registrado en este evento');
+        RAISE_APPLICATION_ERROR(-20037, 'El usuario ya est√° registrado en este evento');
     END IF;
     
     -- Obtener siguiente ID de la secuencia
@@ -591,5 +591,96 @@ BEGIN
     
     INSERT INTO EventosAsistencia (id, evento, usuario)
     VALUES (p_id, p_evento, p_usuario);
+END;
+/
+
+--5. Inventario
+--Crear √≠tem de inventario
+CREATE OR REPLACE PROCEDURE crear_inventario_item (
+    p_nombre        IN VARCHAR2,
+    p_tipo          IN VARCHAR2,
+    p_cantidad      IN NUMBER,
+    p_fechaIngreso  IN DATE,
+    p_fechaCad      IN DATE,
+    p_proveedor     IN VARCHAR2,
+    p_fuente        IN VARCHAR2,
+    p_id            OUT NUMBER
+) AS
+BEGIN
+    IF p_fuente NOT IN ('Compra','Donaci√≥n') THEN
+        RAISE_APPLICATION_ERROR(-21001,'Fuente inv√°lida');
+    END IF;
+    SELECT seq_inventario.NEXTVAL INTO p_id FROM dual;
+    INSERT INTO Inventario(id,nombre,tipo,cantidad,fechaIngreso,fechaCaducidad,proveedor,fuente)
+    VALUES (p_id,p_nombre,p_tipo,p_cantidad,p_fechaIngreso,p_fechaCad,p_proveedor,p_fuente);
+END;
+/
+
+-- Actualizar √≠tem de inventario
+CREATE OR REPLACE PROCEDURE actualizar_inventario_item(
+    p_id            IN NUMBER,
+    p_nombre        IN VARCHAR2,
+    p_tipo          IN VARCHAR2,
+    p_cantidad      IN NUMBER,
+    p_fechaIngreso  IN DATE,
+    p_fechaCad      IN DATE,
+    p_proveedor     IN VARCHAR2,
+    p_fuente        IN VARCHAR2
+) AS
+    v_exists NUMBER;
+BEGIN
+    SELECT COUNT(*) INTO v_exists FROM Inventario WHERE id = p_id;
+    IF v_exists=0 THEN RAISE_APPLICATION_ERROR(-21002,'√çtem no existe'); END IF;
+    IF p_fuente NOT IN ('Compra','Donaci√≥n') THEN
+        RAISE_APPLICATION_ERROR(-21001,'Fuente inv√°lida');
+    END IF;
+    UPDATE Inventario
+       SET nombre=p_nombre, tipo=p_tipo, cantidad=p_cantidad,
+           fechaIngreso=p_fechaIngreso, fechaCaducidad=p_fechaCad,
+           proveedor=p_proveedor, fuente=p_fuente
+     WHERE id=p_id;
+END;
+/
+
+-- Eliminar √≠tem de inventario
+CREATE OR REPLACE PROCEDURE eliminar_inventario_item(p_id IN NUMBER) AS
+    v_exists NUMBER;
+BEGIN
+    SELECT COUNT(*) INTO v_exists FROM Inventario WHERE id = p_id;
+    IF v_exists=0 THEN RAISE_APPLICATION_ERROR(-21002,'√çtem no existe'); END IF;
+    DELETE FROM Inventario WHERE id=p_id;
+END;
+/
+
+--6. Voluntario
+-- Asignar actividad a voluntario
+CREATE OR REPLACE PROCEDURE asignar_actividad_voluntario(
+    p_voluntario_id IN NUMBER,
+    p_actividad     IN VARCHAR2
+) AS
+    v_exists NUMBER;
+BEGIN
+    SELECT COUNT(*) INTO v_exists FROM Voluntarios WHERE id = p_voluntario_id;
+    IF v_exists=0 THEN RAISE_APPLICATION_ERROR(-21010,'Voluntario no existe'); END IF;
+
+    INSERT INTO VoluntariosActividades(voluntario_id,actividad)
+    VALUES(p_voluntario_id, p_actividad);
+END;
+/
+
+-- Quitar actividad a voluntario
+CREATE OR REPLACE PROCEDURE quitar_actividad_voluntario(
+    p_voluntario_id IN NUMBER,
+    p_actividad     IN VARCHAR2
+) AS
+    v_exists NUMBER;
+BEGIN
+    SELECT COUNT(*) INTO v_exists
+      FROM VoluntariosActividades
+     WHERE voluntario_id=p_voluntario_id AND actividad=p_actividad;
+    IF v_exists=0 THEN RAISE_APPLICATION_ERROR(-21011,'Actividad no asignada'); END IF;
+
+    DELETE FROM VoluntariosActividades
+     WHERE voluntario_id=p_voluntario_id AND actividad=p_actividad;
 END;
 /
