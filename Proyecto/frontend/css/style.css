@@ -263,3 +263,90 @@ header {
     font-weight: bold;
     margin: 0;
 }
+
+
+/* === Carrusel para "Módulos de Vistas" (sin JS) === */
+.modules-carousel{
+  position: relative;
+  max-width: 1100px;
+  margin: 0 auto;
+}
+.modules-carousel > input{ display: none; }
+
+.modules-carousel .viewport{
+  overflow: hidden;
+  border-radius: 6px;
+}
+
+.modules-carousel .track{
+  display: flex;
+  width: 300%;                 /* 3 slides => 300% */
+  transform: translateX(0%);
+  transition: transform .6s ease;
+}
+
+.modules-carousel .slide{
+  flex: 0 0 100%;
+  padding: 0 8px;
+}
+
+.modules-carousel .slide .card{
+  height: 100%;
+  box-shadow: 0 8px 16px rgba(0,0,0,.08);
+}
+
+/* Dots */
+.modules-carousel .dots{
+  display: flex;
+  gap: 10px;
+  justify-content: center;
+  margin-top: 14px;
+}
+.modules-carousel .dots label{
+  width: 10px; height: 10px; border-radius: 50%;
+  background: #cfd3d8;
+  cursor: pointer;
+  transition: transform .2s ease, background .2s ease;
+}
+#mods-1:checked ~ .dots label[for="mods-1"],
+#mods-2:checked ~ .dots label[for="mods-2"],
+#mods-3:checked ~ .dots label[for="mods-3"]{
+  background: #10bc69; transform: scale(1.15);
+}
+
+/* Flechas */
+.modules-carousel .nav{
+  position: absolute; inset: 0;
+  pointer-events: none;
+}
+.modules-carousel .prev,
+.modules-carousel .next{
+  position: absolute; top: 50%; transform: translateY(-50%);
+  background: rgba(0,0,0,.45);
+  color: #fff; font-size: 28px; line-height: 1;
+  padding: .35rem .7rem; border-radius: 9999px;
+  cursor: pointer; pointer-events: auto; user-select: none;
+  transition: background .2s ease, transform .2s ease;
+}
+.modules-carousel .prev{ left: 8px; }
+.modules-carousel .next{ right: 8px; }
+.modules-carousel .prev:hover, .modules-carousel .next:hover{
+  background: rgba(0,0,0,.65); transform: translateY(-50%) scale(1.05);
+}
+
+/* Mostrar sólo el par de flechas del slide activo */
+.modules-carousel .prev, .modules-carousel .next{ display: none; }
+#mods-1:checked ~ .nav .prev-1, #mods-1:checked ~ .nav .next-1{ display:block; }
+#mods-2:checked ~ .nav .prev-2, #mods-2:checked ~ .nav .next-2{ display:block; }
+#mods-3:checked ~ .nav .prev-3, #mods-3:checked ~ .nav .next-3{ display:block; }
+
+/* Movimiento según el radio seleccionado */
+#mods-1:checked ~ .viewport .track{ transform: translateX(0%); }
+#mods-2:checked ~ .viewport .track{ transform: translateX(-100%); }
+#mods-3:checked ~ .viewport .track{ transform: translateX(-200%); }
+
+/* Respeta reduce motion */
+@media (prefers-reduced-motion: reduce){
+  .modules-carousel .track{ transition: none; }
+  .modules-carousel .prev:hover, .modules-carousel .next:hover{ transform: translateY(-50%); }
+}

@@ -1,13 +1,15 @@
 <!DOCTYPE html>
 <html lang="es">
+
 <head>
   <meta charset="UTF-8">
-  <title>Reportes - Dejando Huella</title>
+  <title>Mascotas - Dejando Huella</title>
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <link rel="stylesheet" href="css/style.css">
   <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
 </head>
+
 <body>
   <header class="header d-flex align-items-center sticky-top">
     <div class="container-fluid container-xl position-relative d-flex align-items-center justify-content-between">
@@ -17,9 +19,9 @@
       <nav class="navmenu">
         <ul>
           <li><a href="index.html">Inicio</a></li>
-          <li><a href="mascotasDisponibles.html">Mascotas</a></li>
-          <li><a href="EventosDisponibles.html">Eventos</a></li>
-          <li><a href="campaniasDisponibles.html">Campañas</a></li>
+          <li><a href="mascotas.html">Mascotas</a></li>
+          <li><a href="eventos.html">Eventos</a></li>
+          <li><a href="campanias.html" class="active">Campañas</a></li>
           <li><a class="btn btn-primary btn-sm text-white" href="register.html">Registro</a></li>
           <li><a class="btn btn-success btn-sm text-white" href="login.html">Login</a></li>
         </ul>
@@ -28,32 +30,38 @@
   </header>
 
   <main class="container py-5">
-    <h2 class="text-center mb-4">Reportes del Sistema</h2>
+    <h2 class="text-center mb-4">Mascotas</h2>
 
     <div class="mb-4 text-right">
-      <button class="btn btn-primary"><i class="fas fa-file-download"></i> Generar PDF</button>
+      <a href="crearMascotas.html" class="btn btn-success"><i class="fas fa-bullhorn"></i> Registrar Mascota</a>
     </div>
 
     <div class="table-responsive">
       <table class="table table-bordered table-striped">
         <thead class="thead-dark">
           <tr>
-            <th>Tipo de Reporte</th>
+            <th>Nombre de la Mascota</th>
+            <th>Raza</th>
+            <th>Edad</th>
             <th>Descripción</th>
-            <th>Fecha Generado</th>
-            <th>Generado por</th>
+            <th>Foto</th>
+            <th>Estado</th>
+            <th>Usuario</th>
             <th>Acciones</th>
           </tr>
         </thead>
-        <tbody id="reportesTable">
+        <tbody id="mascotasTable">
           <tr>
-            <td>Adopciones</td>
-            <td>Listado de adopciones exitosas del mes</td>
-            <td>2025-07-10</td>
-            <td>admin@dejandohuella.org</td>
+            <th>Nombre de la Mascota</th>
+            <th>Raza</th>
+            <th>Edad</th>
+            <th>Descripción</th>
+            <th>Foto</th>
+            <th>Estado</th>
+            <th>Usuario</th>
             <td>
-              <button class="btn btn-success btn-sm"><i class="fas fa-eye"></i></button>
-              <button class="btn btn-secondary btn-sm"><i class="fas fa-download"></i></button>
+              <button class="btn btn-info btn-sm"><i class="fas fa-edit"></i></button>
+              <button class="btn btn-danger btn-sm"><i class="fas fa-trash-alt"></i></button>
             </td>
           </tr>
         </tbody>
@@ -68,4 +76,5 @@
   <script src="js/utils.js"></script>
   <script src="script.js"></script>
 </body>
+
 </html>
