@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <title>Dejando Huella</title>
     <meta name="viewport" content="width=device-width, initial-scale=1">
+    <!-- Mantengo tus mismas dependencias -->
     <link rel="stylesheet" href="css/style.css">
     <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
@@ -11,27 +12,31 @@
 </head>
 <body>
     <script>localStorage.removeItem('user');</script>
+
+    <!-- HEADER -->
     <header id="header" class="header d-flex align-items-center sticky-top">
         <div class="container-fluid container-xl position-relative d-flex align-items-center justify-content-between">
             <a href="index.html" class="logo d-flex align-items-center me-auto">
                 <h1 class="sitename">Dejando Huella</h1>
             </a>
- 
+
             <nav id="navmenu" class="navmenu">
                 <ul>
-                    <li><a href="index.html">Inicio</a></li>
-                    <li><a href="MascotasDisponibles.html">Mascotas</a></li>
+                    <li><a href="index.html" class="active">Inicio</a></li>
+                    <!-- Corrijo rutas y mayúsculas -->
+                    <li><a href="mascotasDisponibles.html">Mascotas</a></li>
                     <li><a href="EventosDisponibles.html">Eventos</a></li>
-                    <li><a href="CampaniasDIsponibles.html">Campañas</a></li>
+                    <li><a href="campaniasDisponibles.html">Campañas</a></li>
                     <li><a class="btn btn-primary btn-sm text-white" href="register.html">Registro</a></li>
                     <li><a class="btn btn-success btn-sm text-white" href="login.html">Login</a></li>
                 </ul>
             </nav>
         </div>
     </header>
- 
+
     <div class="home-container">
- 
+
+        <!-- Hero -->
         <div class="jumbotron-fluid text-center text-white py-5 mb-0" style="background-color: #10bc69 !important;">
             <div class="container">
                 <h1 class="display-4 text-white">Bienvenido a Dejando Huella</h1>
@@ -40,7 +45,8 @@
                 <p>Plataforma unificada para el manejo de todos los procesos de la organización</p>
             </div>
         </div>
- 
+
+        <!-- KPIs -->
         <div class="bg-light py-4">
             <div class="container">
                 <div class="row text-center">
@@ -59,13 +65,17 @@
                     <div class="col-md-3">
                         <h3 class="text-green" id="voluntariosCount">0</h3>
                         <p class="mb-0">Voluntarios activos</p>
-                </div>
-            </div>
+                    </div>
+                </div> <!-- /row -->
+            </div> <!-- /container -->
         </div>
- 
+
+        <!-- Módulos -->
         <div class="container py-5">
             <h2 class="text-center mb-4">Módulos Principales</h2>
             <div class="row">
+
+                <!-- Mascotas -->
                 <div class="col-md-4 mb-4">
                     <div class="card h-100 shadow-sm">
                         <div class="card-icon bg-info text-white text-center py-3">
@@ -75,13 +85,16 @@
                             <h5 class="card-title">Mascotas</h5>
                             <p class="card-text">Echa un vistazo a las mascotas disponibles.</p>
                             <div class="btn-group" role="group">
-                                <a href="index_MascotasDisponibles.html" class="btn btn-success">
+                                <!-- Ruta corregida -->
+                                <a href="mascotasDisponibles.html" class="btn btn-success">
                                     <i class="fas fa-list"></i> Listado
                                 </a>
                             </div>
                         </div>
                     </div>
                 </div>
+
+                <!-- Eventos -->
                 <div class="col-md-4 mb-4">
                     <div class="card h-100 shadow-sm">
                         <div class="card-icon bg-success text-white text-center py-3">
@@ -98,6 +111,8 @@
                         </div>
                     </div>
                 </div>
+
+                <!-- Campañas -->
                 <div class="col-md-4 mb-4">
                     <div class="card h-100 shadow-sm">
                         <div class="card-icon bg-warning text-white text-center py-3">
@@ -107,19 +122,24 @@
                             <h5 class="card-title">Campañas</h5>
                             <p class="card-text">¡Echa un vistazo a las campañas activas!</p>
                             <div class="btn-group" role="group">
-                                <a href="CampaniasDIsponibles.html" class="btn btn-success">
+                                <!-- Ruta corregida y sin error de mayúscula en “DIsponibles” -->
+                                <a href="campaniasDisponibles.html" class="btn btn-success">
                                     <i class="fas fa-list"></i> Listado
                                 </a>
                             </div>
                         </div>
                     </div>
                 </div>
-            </div>
-        </div>
-    </div>
+
+            </div> <!-- /row -->
+        </div> <!-- /container -->
+    </div> <!-- /home-container -->
+
     <footer>
         <p>&copy; 2025 Dejando Huella. Todos los derechos reservados.</p>
     </footer>
+
+    <!-- JS -->
     <script src="js/utils.js"></script>
 </body>
 </html>
