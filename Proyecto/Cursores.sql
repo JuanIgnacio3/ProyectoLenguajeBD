@@ -9,13 +9,13 @@ BEGIN
 END;
 /
 
--- 2. Cursor para obtener campañas activas y su objetivo
+-- 2. Cursor para obtener campanias activas y su objetivo
 DECLARE
-  CURSOR cur_campanas_activas IS
-    SELECT id, nombre, objetivo FROM Campanas WHERE estado = 'Activa';
+  CURSOR cur_campanias_activas IS
+    SELECT id, nombre, objetivo FROM campanias WHERE estado = 'Activa';
 BEGIN
-  FOR campana IN cur_campanas_activas LOOP
-    DBMS_OUTPUT.PUT_LINE('Campaña: ' || campana.nombre || ', Objetivo: ' || campana.objetivo);
+  FOR campania IN cur_campanias_activas LOOP
+    DBMS_OUTPUT.PUT_LINE('campania: ' || campania.nombre || ', Objetivo: ' || campania.objetivo);
   END LOOP;
 END;
 /
@@ -55,13 +55,13 @@ BEGIN
 END;
 /
 
--- 6. Cursor para contar donaciones por campaña
+-- 6. Cursor para contar donaciones por campania
 DECLARE
-  CURSOR cur_donaciones_campana IS
-    SELECT campana, COUNT(*) AS total_donaciones FROM DonacionesCampanas GROUP BY campana;
+  CURSOR cur_donaciones_campania IS
+    SELECT campania, COUNT(*) AS total_donaciones FROM Donacionescampanias GROUP BY campania;
 BEGIN
-  FOR registro IN cur_donaciones_campana LOOP
-    DBMS_OUTPUT.PUT_LINE('Campaña ID: ' || registro.campana || ', Donaciones: ' || registro.total_donaciones);
+  FOR registro IN cur_donaciones_campania LOOP
+    DBMS_OUTPUT.PUT_LINE('campania ID: ' || registro.campania || ', Donaciones: ' || registro.total_donaciones);
   END LOOP;
 END;
 /
@@ -90,18 +90,18 @@ BEGIN
 END;
 /
 
--- 9. Cursor para listar campañas y porcentaje completado
+-- 9. Cursor para listar campanias y porcentaje completado
 DECLARE
-  CURSOR cur_campanas_porcentaje IS
+  CURSOR cur_campanias_porcentaje IS
     SELECT c.id, c.nombre,
            ROUND(NVL(SUM(d.cantidad), 0) / c.objetivo * 100, 2) AS porcentaje
-    FROM Campanas c
-    LEFT JOIN DonacionesCampanas d ON c.id = d.campana
+    FROM campanias c
+    LEFT JOIN Donacionescampanias d ON c.id = d.campania
     WHERE c.estado = 'Activa'
     GROUP BY c.id, c.nombre, c.objetivo;
 BEGIN
-  FOR campana IN cur_campanas_porcentaje LOOP
-    DBMS_OUTPUT.PUT_LINE('Campaña: ' || campana.nombre || ', Completado: ' || campana.porcentaje || '%');
+  FOR campania IN cur_campanias_porcentaje LOOP
+    DBMS_OUTPUT.PUT_LINE('campania: ' || campania.nombre || ', Completado: ' || campania.porcentaje || '%');
   END LOOP;
 END;
 /
@@ -172,5 +172,66 @@ BEGIN
   FOR mascota IN cur_mascotas_descripcion LOOP
     DBMS_OUTPUT.PUT_LINE('Mascota: ' || mascota.nombre || ', Longitud descripción: ' || mascota.largo);
   END LOOP;
+END;
+/
+
+-- 1. Cursor para recorrer tabla usuarios y asignar roles
+
+
+DECLARE
+    -- Cursor para recorrer todos los usuarios de la tabla
+    CURSOR cur_usuarios IS
+        SELECT id, nombre, rol
+        FROM Usuarios;
+
+    v_profile VARCHAR2(50);
+    v_sql     VARCHAR2(1000);
+
+BEGIN
+    FOR usr IN cur_usuarios LOOP
+        -- Asignar perfil según el rol
+        IF usr.rol = 1 THEN
+            v_profile := 'perfil_admin_Proyecto';
+        ELSIF usr.rol = 2 THEN
+            v_profile := 'perfil_usuario_Proyecto';
+        ELSIF usr.rol = 3 THEN
+            v_profile := 'perfil_voluntario_Proyecto';
+        ELSE
+            v_profile := 'perfil_usuario_Proyecto'; -- Default
+        END IF;
+
+        -- Crear el usuario de Oracle con tablespace y contraseña temporal
+        BEGIN
+            v_sql := 'CREATE USER ' || usr.nombre || 
+                     ' IDENTIFIED BY "TempPass123" ' ||
+                     ' DEFAULT TABLESPACE dejandoHuella_ts ' ||
+                     ' TEMPORARY TABLESPACE dejandoHuella_temp ' ||
+                     ' QUOTA UNLIMITED ON dejandoHuella_ts';
+            EXECUTE IMMEDIATE v_sql;
+        EXCEPTION
+            WHEN OTHERS THEN
+                DBMS_OUTPUT.PUT_LINE('Usuario ' || usr.nombre || ' ya existe o error: ' || SQLERRM);
+        END;
+
+        -- Otorgar privilegios CONNECT
+        BEGIN
+            v_sql := 'GRANT CONNECT TO ' || usr.nombre;
+            EXECUTE IMMEDIATE v_sql;
+        EXCEPTION
+            WHEN OTHERS THEN
+                DBMS_OUTPUT.PUT_LINE('Error otorgando CONNECT a ' || usr.nombre || ': ' || SQLERRM);
+        END;
+
+        -- Asignar perfil
+        BEGIN
+            v_sql := 'ALTER USER ' || usr.nombre || ' PROFILE ' || v_profile;
+            EXECUTE IMMEDIATE v_sql;
+        EXCEPTION
+            WHEN OTHERS THEN
+                DBMS_OUTPUT.PUT_LINE('Error asignando perfil a ' || usr.nombre || ': ' || SQLERRM);
+        END;
+
+        DBMS_OUTPUT.PUT_LINE('Usuario ' || usr.nombre || ' procesado.');
+    END LOOP;
 END;
 /

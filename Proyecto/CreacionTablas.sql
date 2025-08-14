@@ -12,7 +12,7 @@ CREATE TABLE Usuarios (
     nombre VARCHAR2(100) NOT NULL CHECK (REGEXP_LIKE(nombre, '^[A-Z�����][a-z�����\s''-]+$')),
     apellido VARCHAR2(100) NOT NULL CHECK (REGEXP_LIKE(apellido, '^[A-Z�����][a-z�����\s''-]+$')),
     email VARCHAR2(100) NOT NULL CHECK (REGEXP_LIKE(email, '^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$')),
-    password VARCHAR2(100) NOT NULL CHECK (LENGTH(password) >= 6),
+    password VARCHAR2(100) NOT NULL CHECK (LENGTH(password) >= 8),
     telefono VARCHAR2(10) NOT NULL CHECK (REGEXP_LIKE(telefono, '^[0-9]{8,10}$')),
     rol NUMBER NOT NULL CHECK (rol IN (1, 2, 3)),
     CONSTRAINT fk_usuario_rol FOREIGN KEY (rol) REFERENCES Roles(id)
@@ -27,7 +27,7 @@ CREATE TABLE Mascotas (
     descripcion VARCHAR2(500) NOT NULL,
     foto VARCHAR2(500),
     estado VARCHAR2(20) NOT NULL CHECK (estado IN ('Disponible', 'Adoptado')),
-    usuario NUMBER NOT NULL,
+    usuario NUMBER ,
     CONSTRAINT fk_mascota_usuario FOREIGN KEY (usuario) REFERENCES Usuarios(id)
 );
 
@@ -36,10 +36,10 @@ CREATE TABLE HistorialMedico (
     id NUMBER PRIMARY KEY,
     mascota NUMBER NOT NULL,
     fecha DATE NOT NULL,
-    diagnostico VARCHAR2(500) NOT NULL,
-    tratamiento VARCHAR2(500) NOT NULL,
-    veterinario VARCHAR2(100) NOT NULL,
-    observaciones VARCHAR2(500) NOT NULL,
+    diagnostico VARCHAR2(500),
+    tratamiento VARCHAR2(500),
+    veterinario VARCHAR2(100),
+    observaciones VARCHAR2(500),
     estado VARCHAR2(20) NOT NULL CHECK (estado IN ('Activo', 'Inactivo')),
     CONSTRAINT fk_historial_mascota FOREIGN KEY (mascota) REFERENCES Mascotas(id)
 );
@@ -69,8 +69,8 @@ CREATE TABLE Reportes (
     CONSTRAINT fk_reporte_mascota FOREIGN KEY (mascota) REFERENCES Mascotas(id)
 );
 
---7. Tabla Campañas
-CREATE TABLE Campañas (
+--7. Tabla campanias
+CREATE TABLE campanias (
     id NUMBER PRIMARY KEY,
     nombre VARCHAR2(100) NOT NULL,
     descripcion VARCHAR2(500) NOT NULL,
@@ -79,21 +79,21 @@ CREATE TABLE Campañas (
     objetivo NUMBER NOT NULL,
     estado VARCHAR2(20) NOT NULL CHECK (estado IN ('Activa', 'Inactiva')),
     usuario NUMBER NOT NULL,
-    CONSTRAINT fk_campaña_usuario FOREIGN KEY (usuario) REFERENCES Usuarios(id)
+    CONSTRAINT fk_campania_usuario FOREIGN KEY (usuario) REFERENCES Usuarios(id)
 );
 
---8. Tabla DonacionesCampañas
-CREATE TABLE DonacionesCampañas (
+--8. Tabla Donacionescampanias
+CREATE TABLE Donacionescampanias (
     id NUMBER PRIMARY KEY,
     fecha DATE NOT NULL,
     cantidad NUMBER NOT NULL,
     usuario NUMBER NOT NULL,
-    campaña NUMBER NOT NULL,
+    campania NUMBER NOT NULL,
     CONSTRAINT fk_donacion_usuario FOREIGN KEY (usuario) REFERENCES Usuarios(id),
-    CONSTRAINT fk_donacion_campaña FOREIGN KEY (campaña) REFERENCES Campañas(id)
+    CONSTRAINT fk_donacion_campania FOREIGN KEY (campania) REFERENCES campanias(id)
 );
 
---9. Tabla DonacionesCampañas
+--9. Tabla Inventario
 CREATE TABLE Inventario (
     id NUMBER PRIMARY KEY,
     nombre VARCHAR2(100) NOT NULL,
@@ -161,10 +161,10 @@ CREATE INDEX idx_mascotas_estado ON Mascotas(estado);
 CREATE INDEX idx_historial_mascota ON HistorialMedico(mascota);
 CREATE INDEX idx_adopciones_usuario ON Adopciones(usuario);
 CREATE INDEX idx_reportes_usuario ON Reportes(usuario);
-CREATE INDEX idx_campañas_nombre ON Campañas(nombre);
-CREATE INDEX idx_campañas_estado ON Campañas(estado);
-CREATE INDEX idx_donaciones_usuario ON DonacionesCampañas(usuario);
-CREATE INDEX idx_donaciones_campaña ON DonacionesCampañas(campaña);
+CREATE INDEX idx_campanias_nombre ON campanias(nombre);
+CREATE INDEX idx_campanias_estado ON campanias(estado);
+CREATE INDEX idx_donaciones_usuario ON Donacionescampanias(usuario);
+CREATE INDEX idx_donaciones_campania ON Donacionescampanias(campania);
 CREATE INDEX idx_inventario_nombre ON Inventario(nombre);
 CREATE INDEX idx_inventario_fuente ON Inventario(fuente);
 CREATE INDEX idx_eventos_nombre ON Eventos(nombre);
@@ -181,7 +181,7 @@ CREATE SEQUENCE seq_mascotas START WITH 7;
 CREATE SEQUENCE seq_historial_medico START WITH 4;
 CREATE SEQUENCE seq_adopciones START WITH 4;
 CREATE SEQUENCE seq_reportes START WITH 5;
-CREATE SEQUENCE seq_campañas START WITH 4;
+CREATE SEQUENCE seq_campanias START WITH 4;
 CREATE SEQUENCE seq_donaciones START WITH 4;
 CREATE SEQUENCE seq_inventario START WITH 4;
 CREATE SEQUENCE seq_eventos START WITH 4;

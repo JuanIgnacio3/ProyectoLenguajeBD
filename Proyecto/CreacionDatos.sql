@@ -22,7 +22,7 @@ VALUES (1, 'Firulais', 'Pastor Aleman', 5, 'Perro muy jugueton',
 'Disponible', 1);
 
 INSERT INTO Mascotas (id, nombre, raza, edad, descripcion, foto, estado, usuario) 
-VALUES (2, 'Michi', 'Siames', 3, 'Gato muy cariñoso', 
+VALUES (2, 'Michi', 'Siames', 3, 'Gato muy carinoso', 
 'https://th.bing.com/th/id/R.05c7a6031cec41379e72b095d582d262?rik=ttZ9dEibbwSFig&pid=ImgRaw&r=0', 
 'Disponible', 1);
 
@@ -77,27 +77,27 @@ VALUES (3, SYSDATE, 3, 3, 'Heredia', 'Barva', 'San Pedro', 'Se perdio en la call
 INSERT INTO Reportes (id, fecha, usuario, mascota, provincia, canton, distrito, detalles) 
 VALUES (4, SYSDATE, 3, NULL, 'Heredia', 'Barva', 'San Pedro', 'Se avistó un gato con su pata trasera lastimada');
 
---7. Insertar campañas
-INSERT INTO Campañas (id, nombre, descripcion, fechaInicio, fechaFin, objetivo, estado, usuario) 
-VALUES (1, 'Ayuda para los peluditos', 'Campaña para recolectar fondos para los animales del refugio', 
+--7. Insertar campanias
+INSERT INTO campanias (id, nombre, descripcion, fechaInicio, fechaFin, objetivo, estado, usuario) 
+VALUES (1, 'Ayuda para los peluditos', 'campania para recolectar fondos para los animales del refugio', 
 SYSDATE, SYSDATE, 500000, 'Activa', 1);
 
-INSERT INTO Campañas (id, nombre, descripcion, fechaInicio, fechaFin, objetivo, estado, usuario) 
-VALUES (2, 'Ayuda para comprar comida', 'Campaña para recolectar fondos para comprar comida para los animales del refugio', 
+INSERT INTO campanias (id, nombre, descripcion, fechaInicio, fechaFin, objetivo, estado, usuario) 
+VALUES (2, 'Ayuda para comprar comida', 'campania para recolectar fondos para comprar comida para los animales del refugio', 
 SYSDATE, SYSDATE, 1000000, 'Activa', 1);
 
-INSERT INTO Campañas (id, nombre, descripcion, fechaInicio, fechaFin, objetivo, estado, usuario) 
-VALUES (3, 'Ayuda para pagar servicios', 'Campaña para pagar los servicios del refugio', 
+INSERT INTO campanias (id, nombre, descripcion, fechaInicio, fechaFin, objetivo, estado, usuario) 
+VALUES (3, 'Ayuda para pagar servicios', 'campania para pagar los servicios del refugio', 
 SYSDATE, SYSDATE, 1500000, 'Activa', 1);
 
 --8. Insertar donaciones
-INSERT INTO DonacionesCampañas (id, fecha, cantidad, usuario, campaña) 
+INSERT INTO Donacionescampanias (id, fecha, cantidad, usuario, campania) 
 VALUES (1, SYSDATE, 10000, 2, 1);
 
-INSERT INTO DonacionesCampañas (id, fecha, cantidad, usuario, campaña) 
+INSERT INTO Donacionescampanias (id, fecha, cantidad, usuario, campania) 
 VALUES (2, SYSDATE, 20000, 2, 2);
 
-INSERT INTO DonacionesCampañas (id, fecha, cantidad, usuario, campaña) 
+INSERT INTO Donacionescampanias (id, fecha, cantidad, usuario, campania) 
 VALUES (3, SYSDATE, 30000, 3, 3);
 
 --9. Insertar inventario
@@ -108,7 +108,7 @@ INSERT INTO Inventario (id, nombre, tipo, cantidad, fechaIngreso, fechaCaducidad
 VALUES (2, 'Comida para gato', 'Alimento', 50, SYSDATE, TO_DATE('2025-06-09', 'YYYY-MM-DD'), 'Whiskas', 'Donaci�n');
 
 INSERT INTO Inventario (id, nombre, tipo, cantidad, fechaIngreso, fechaCaducidad, proveedor, fuente) 
-VALUES (3, 'Pelotas', 'Juguete', 20, SYSDATE, NULL, 'Juguetes S.A.', 'Donación');
+VALUES (3, 'Pelotas', 'Juguete', 20, SYSDATE, NULL, 'Juguetes S.A.', 'Donacion');
 
 --10. Insertar eventos
 INSERT INTO Eventos (id, nombre, descripcion, fecha, ubicacion, responsable, tipo, estado) 
@@ -148,8 +148,8 @@ INSERT INTO Contadores (id, seq) VALUES ('mascotas_id', 6);
 INSERT INTO Contadores (id, seq) VALUES ('historialMedico_id', 3);
 INSERT INTO Contadores (id, seq) VALUES ('adopciones_id', 3);
 INSERT INTO Contadores (id, seq) VALUES ('reportes_id', 4);
-INSERT INTO Contadores (id, seq) VALUES ('campañas_id', 3);
-INSERT INTO Contadores (id, seq) VALUES ('donacionesCampañas_id', 3);
+INSERT INTO Contadores (id, seq) VALUES ('campanias_id', 3);
+INSERT INTO Contadores (id, seq) VALUES ('donacionescampanias_id', 3);
 INSERT INTO Contadores (id, seq) VALUES ('inventario_id', 3);
 INSERT INTO Contadores (id, seq) VALUES ('eventos_id', 3);
 INSERT INTO Contadores (id, seq) VALUES ('eventosAsistencia_id', 3);

@@ -10,23 +10,23 @@ BEGIN
 END;
 /
 
--- 2) Total recaudado de una campaña
-CREATE OR REPLACE FUNCTION fn_campana_recaudado(p_campana_id NUMBER)
+-- 2) Total recaudado de una campania
+CREATE OR REPLACE FUNCTION fn_campania_recaudado(p_campania_id NUMBER)
 RETURN NUMBER IS v_total NUMBER;
 BEGIN
   SELECT NVL(SUM(cantidad),0) INTO v_total
-    FROM DonacionesCampanas
-   WHERE campaña = p_campana_id;
+    FROM Donacionescampanias
+   WHERE campania = p_campania_id;
   RETURN v_total;
 END;
 /
 
--- 3) % de avance de campaña
-CREATE OR REPLACE FUNCTION fn_campana_porcentaje(p_campana_id NUMBER)
+-- 3) % de avance de campania
+CREATE OR REPLACE FUNCTION fn_campania_porcentaje(p_campania_id NUMBER)
 RETURN NUMBER IS v_obj NUMBER; v_tot NUMBER;
 BEGIN
-  SELECT objetivo INTO v_obj FROM Campanas WHERE id=p_campana_id;
-  v_tot := fn_campana_recaudado(p_campana_id);
+  SELECT objetivo INTO v_obj FROM campanias WHERE id=p_campania_id;
+  v_tot := fn_campania_recaudado(p_campania_id);
   IF v_obj=0 THEN RETURN 0; END IF;
   RETURN ROUND( (v_tot / v_obj) * 100, 2 );
 EXCEPTION WHEN NO_DATA_FOUND THEN RETURN 0;
@@ -96,11 +96,11 @@ EXCEPTION WHEN NO_DATA_FOUND THEN RETURN 0;
 END;
 /
 
--- 10) Días restantes de campaña
-CREATE OR REPLACE FUNCTION fn_dias_restantes_campana(p_campana_id NUMBER)
+-- 10) Días restantes de campania
+CREATE OR REPLACE FUNCTION fn_dias_restantes_campania(p_campania_id NUMBER)
 RETURN NUMBER IS v_fin DATE;
 BEGIN
-  SELECT fechaFin INTO v_fin FROM Campanas WHERE id=p_campana_id;
+  SELECT fechaFin INTO v_fin FROM campanias WHERE id=p_campania_id;
   RETURN GREATEST(TRUNC(v_fin)-TRUNC(SYSDATE),0);
 EXCEPTION WHEN NO_DATA_FOUND THEN RETURN 0;
 END;

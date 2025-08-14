@@ -125,9 +125,9 @@ BEGIN
 END;
 /
 
---2. Procedimientos para Campañas
--- Crear campaña con secuencia
-CREATE OR REPLACE PROCEDURE crear_campana (
+--2. Procedimientos para campanias
+-- Crear campania con secuencia
+CREATE OR REPLACE PROCEDURE crear_campania (
     p_nombre       IN VARCHAR2,
     p_descripcion  IN VARCHAR2,
     p_fechainicio  IN DATE,
@@ -156,23 +156,23 @@ BEGIN
 END;
 /
 
--- Listar campañas con cursor
-CREATE OR REPLACE PROCEDURE listar_campanas (
+-- Listar campanias con cursor
+CREATE OR REPLACE PROCEDURE listar_campanias (
     p_cursor OUT SYS_REFCURSOR
 ) AS
 BEGIN
     OPEN p_cursor FOR
     SELECT c.id, c.nombre, c.estado, c.fechainicio, c.fechafin, 
            c.objetivo, u.nombre AS responsable,
-           (SELECT NVL(SUM(d.cantidad), 0) FROM DonacionesCampañas d WHERE d.campaña = c.id) AS recaudado
-    FROM Campañas c
+           (SELECT NVL(SUM(d.cantidad), 0) FROM Donacionescampanias d WHERE d.campania = c.id) AS recaudado
+    FROM campanias c
     JOIN Usuarios u ON c.usuario = u.id
     ORDER BY c.fechainicio DESC;
 END;
 /
 
--- Actualizar campaña con validaciones
-CREATE OR REPLACE PROCEDURE actualizar_campana (
+-- Actualizar campania con validaciones
+CREATE OR REPLACE PROCEDURE actualizar_campania (
     p_id           IN NUMBER,
     p_nombre       IN VARCHAR2,
     p_descripcion  IN VARCHAR2,
@@ -184,15 +184,15 @@ CREATE OR REPLACE PROCEDURE actualizar_campana (
 ) AS
     v_count NUMBER;
 BEGIN
-    -- Verificar que la campaña existe
-    SELECT COUNT(*) INTO v_count FROM Campañas WHERE id = p_id;
+    -- Verificar que la campania existe
+    SELECT COUNT(*) INTO v_count FROM campanias WHERE id = p_id;
     IF v_count = 0 THEN
-        RAISE_APPLICATION_ERROR(-20013, 'Campaña no encontrada');
+        RAISE_APPLICATION_ERROR(-20013, 'campania no encontrada');
     END IF;
     
     -- Validar estado
     IF p_estado NOT IN ('Activa', 'Inactiva') THEN
-        RAISE_APPLICATION_ERROR(-20011, 'Estado de campaña no válido');
+        RAISE_APPLICATION_ERROR(-20011, 'Estado de campania no válido');
     END IF;
     
     -- Validar fechas
@@ -200,7 +200,7 @@ BEGIN
         RAISE_APPLICATION_ERROR(-20012, 'Fecha de inicio no puede ser mayor que fecha de fin');
     END IF;
     
-    UPDATE Campañas
+    UPDATE campanias
     SET nombre = p_nombre,
         descripcion = p_descripcion,
         fechainicio = p_fechainicio,
@@ -216,22 +216,22 @@ BEGIN
 END;
 /
 
--- Eliminar campaña con verificación
-CREATE OR REPLACE PROCEDURE eliminar_campana (
+-- Eliminar campania con verificación
+CREATE OR REPLACE PROCEDURE eliminar_campania (
     p_id IN NUMBER
 ) AS
     v_count NUMBER;
 BEGIN
-    -- Verificar que la campaña existe
-    SELECT COUNT(*) INTO v_count FROM Campañas WHERE id = p_id;
+    -- Verificar que la campania existe
+    SELECT COUNT(*) INTO v_count FROM campanias WHERE id = p_id;
     IF v_count = 0 THEN
-        RAISE_APPLICATION_ERROR(-20013, 'Campaña no encontrada');
+        RAISE_APPLICATION_ERROR(-20013, 'campania no encontrada');
     END IF;
     
     -- Verificar si tiene donaciones asociadas
-    SELECT COUNT(*) INTO v_count FROM DonacionesCampañas WHERE campaña = p_id;
+    SELECT COUNT(*) INTO v_count FROM Donacionescampanias WHERE campania = p_id;
     IF v_count > 0 THEN
-        RAISE_APPLICATION_ERROR(-20015, 'No se puede eliminar campaña con donaciones registradas');
+        RAISE_APPLICATION_ERROR(-20015, 'No se puede eliminar campania con donaciones registradas');
     END IF;
     
     DELETE FROM Campa�as WHERE id = p_id;
@@ -389,10 +389,10 @@ BEGIN
         RAISE_APPLICATION_ERROR(-20024, 'No se puede eliminar usuario con mascotas registradas');
     END IF;
     
-    -- Verificar si tiene campañas creadas
-    SELECT COUNT(*) INTO v_count FROM Campañas WHERE usuario = p_id;
+    -- Verificar si tiene campanias creadas
+    SELECT COUNT(*) INTO v_count FROM campanias WHERE usuario = p_id;
     IF v_count > 0 THEN
-        RAISE_APPLICATION_ERROR(-20025, 'No se puede eliminar usuario con campañas creadas');
+        RAISE_APPLICATION_ERROR(-20025, 'No se puede eliminar usuario con campanias creadas');
     END IF;
     
     -- Verificar si tiene adopciones
@@ -405,7 +405,7 @@ BEGIN
     DELETE FROM Voluntarios WHERE usuario = p_id;
     DELETE FROM EventosAsistencia WHERE usuario = p_id;
     DELETE FROM Reportes WHERE usuario = p_id;
-    DELETE FROM DonacionesCampañas WHERE usuario = p_id;
+    DELETE FROM Donacionescampanias WHERE usuario = p_id;
     
     -- Finalmente eliminar el usuario
     DELETE FROM Usuarios WHERE id = p_id;

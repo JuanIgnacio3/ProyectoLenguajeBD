@@ -34,15 +34,15 @@ CREATE OR REPLACE PACKAGE BODY pkg_eventos AS
 END pkg_eventos;
 /
 
--- 4) pkg_campanas
-CREATE OR REPLACE PACKAGE pkg_campanas AS
+-- 4) pkg_campanias
+CREATE OR REPLACE PACKAGE pkg_campanias AS
   FUNCTION recaudado(p_id NUMBER) RETURN NUMBER;
-END pkg_campanas;
+END pkg_campanias;
 /
-CREATE OR REPLACE PACKAGE BODY pkg_campanas AS
+CREATE OR REPLACE PACKAGE BODY pkg_campanias AS
   FUNCTION recaudado(p_id NUMBER) RETURN NUMBER IS
-  BEGIN RETURN fn_campana_recaudado(p_id); END;
-END pkg_campanas;
+  BEGIN RETURN fn_campania_recaudado(p_id); END;
+END pkg_campanias;
 /
 
 -- 5) pkg_inventario
@@ -106,7 +106,7 @@ END pkg_donaciones;
 CREATE OR REPLACE PACKAGE BODY pkg_donaciones AS
   FUNCTION total_usuario(p_usuario NUMBER) RETURN NUMBER IS v NUMBER;
   BEGIN
-    SELECT NVL(SUM(cantidad),0) INTO v FROM DonacionesCampanas WHERE usuario=p_usuario;
+    SELECT NVL(SUM(cantidad),0) INTO v FROM Donacionescampanias WHERE usuario=p_usuario;
     RETURN v;
   END;
 END pkg_donaciones;

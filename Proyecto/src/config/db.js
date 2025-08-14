@@ -3,10 +3,10 @@ const oracledb = require('oracledb');
 // Configuración de la conexión
 const dbConfig = {
   //user: 'DejandoHuellaDB', 
-  user: 'HR',
+  user: 'admin_Proyecto',
   password: '12345',
   //connectString: 'localhost:1521/orcl' 
-  connectString: 'localhost:1522/orcl' 
+  connectString: 'localhost:1521/pdb_DejandoHuella' 
 };
 
 // Inicializar el cliente Oracle
@@ -20,7 +20,7 @@ async function getConnection() {
   } catch (err) {
     console.error('Error al conectar a Oracle:', err);
     throw err;
-  }
+  } 
 }
 
 // Función para cerrar conexión

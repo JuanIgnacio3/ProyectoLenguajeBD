@@ -18,8 +18,8 @@ WHERE
 ORDER BY 
     m.nombre;
     
--- Vista de Campañas Activas con Progreso
-CREATE OR REPLACE VIEW vista_campanas_activas AS
+-- Vista de campanias Activas con Progreso
+CREATE OR REPLACE VIEW vista_campanias_activas AS
 SELECT 
     c.id,
     c.nombre,
@@ -32,9 +32,9 @@ SELECT
     u.nombre || ' ' || u.apellido AS responsable,
     u.telefono AS telefono_contacto
 FROM 
-    Campañas c
+    campanias c
 LEFT JOIN 
-    DonacionesCampañas d ON c.id = d.campaña
+    Donacionescampanias d ON c.id = d.campania
 JOIN 
     Usuarios u ON c.usuario = u.id
 WHERE 
@@ -145,14 +145,14 @@ SELECT m.id AS mascota_id,
        ( SELECT MAX(h.fecha) FROM HistorialMedico h WHERE h.mascota = m.id ) AS ultima_fecha
   FROM Mascotas m;
 
--- Donaciones por campaña (resumen)
-CREATE OR REPLACE VIEW vista_donaciones_por_campana AS
-SELECT c.id AS campana_id,
+-- Donaciones por campania (resumen)
+CREATE OR REPLACE VIEW vista_donaciones_por_campania AS
+SELECT c.id AS campania_id,
        c.nombre,
        NVL(SUM(d.cantidad),0) AS total_recaudado,
        COUNT(d.id) AS cant_donaciones
-  FROM Campanas c
-  LEFT JOIN DonacionesCampanas d ON d.campaña = c.id
+  FROM campanias c
+  LEFT JOIN Donacionescampanias d ON d.campania = c.id
  GROUP BY c.id, c.nombre;
 
 -- Inventario por vencer (<= 30 días)
