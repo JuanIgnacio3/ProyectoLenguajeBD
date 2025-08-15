@@ -2,17 +2,14 @@ const oracledb = require('oracledb');
 
 // Configuración de la conexión
 const dbConfig = {
-  //user: 'DejandoHuellaDB', 
   user: 'admin_Proyecto',
   password: '12345',
-  //connectString: 'localhost:1521/orcl' 
   connectString: 'localhost:1521/pdb_DejandoHuella' 
 };
 
-// Inicializar el cliente Oracle
+// Inicializar cliente Oracle
 oracledb.initOracleClient({ libDir: process.env.ORACLE_CLIENT_PATH });
 
-// Función para conectar
 async function getConnection() {
   try {
     const connection = await oracledb.getConnection(dbConfig);
@@ -20,21 +17,19 @@ async function getConnection() {
   } catch (err) {
     console.error('Error al conectar a Oracle:', err);
     throw err;
-  } 
-}
-
-// Función para cerrar conexión
-async function closeConnection(connection) {
-  try {
-    if (connection) {
-      await connection.close();
-    }
-  } catch (err) {
-    console.error('Error al cerrar conexión:', err);
   }
 }
 
-// Función para obtener el próximo valor de secuencia
+async function closeConnection(connection) {
+  if (connection) {
+    try {
+      await connection.close();
+    } catch (err) {
+      console.error('Error al cerrar conexión:', err);
+    }
+  }
+}
+
 async function getNextSeqValue(sequenceName) {
   let connection;
   try {

@@ -16,7 +16,7 @@ class AuthController {
         const errors = validationResult(req);
 
         if (!errors.isEmpty()) {
-            req.flash('error', errors.array());
+            req.flash('error', errors.array().map(err => err.msg));
             req.flash('formData', req.body);
             return res.redirect('/auth/register');
         }
@@ -53,7 +53,7 @@ class AuthController {
         const errors = validationResult(req);
 
         if (!errors.isEmpty()) {
-            req.flash('error', errors.array());
+            req.flash('error', errors.array().map(err => err.msg));
             req.flash('email', req.body.email);
             return res.redirect('/auth/login');
         }
@@ -63,41 +63,51 @@ class AuthController {
             const user = await authService.authenticateUser(email, password);
 
             if (user) {
-                // En aplicaciones con sesiones (como Express con passport), normalmente no se hace esto,
-                // pero si estás usando fetch desde el frontend, responde el user directamente:
-                return res.status(200).json(user);
+                // Aquí podrías iniciar sesión con req.login si usas Passport
+                req.flash('success', `Bienvenido ${user.nombre}`);
+                return res.redirect('/'); // Redirige a home o dashboard
             } else {
-                return res.status(401).json({ error: 'Credenciales inválidas' });
+                req.flash('error', 'Credenciales inválidas');
+                req.flash('email', email);
+                return res.redirect('/auth/login');
             }
         } catch (error) {
             console.error('Error en login:', error);
-            return res.status(500).json({ error: 'Error en el servidor' });
+            req.flash('error', 'Error interno del servidor');
+            return res.redirect('/auth/login');
         }
     }
 
     // Cerrar sesión
     logout(req, res) {
-        authService.destroyUserSession(req);
-        res.redirect('/');
+        // Si usas sesiones
+        if (req.session) {
+            req.session.destroy(err => {
+                if (err) console.error(err);
+                res.redirect('/auth/login');
+            });
+        } else {
+            res.redirect('/auth/login');
+        }
     }
 
     // Middleware para verificar autenticación
     ensureAuthenticated(req, res, next) {
-        if (req.isAuthenticated()) {
+        if (req.user) {
             return next();
         }
         req.flash('error', 'Por favor inicie sesión para continuar');
-        res.redirect('/auth/login');
+        return res.redirect('/auth/login');
     }
 
     // Middleware para verificar roles
-    checkRole(role) {
+    ensureRole(role) {
         return (req, res, next) => {
             if (req.user && req.user.rol === role) {
                 return next();
             }
             req.flash('error', 'No autorizado');
-            res.redirect('/');
+            return res.redirect('/');
         };
     }
 }

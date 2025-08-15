@@ -1,17 +1,17 @@
 const oracledb = require('oracledb');
 const { getConnection, closeConnection, getNextSeqValue } = require('../config/db');
 
-class Campana {
+class campania {
   // CREATE
   static async create(data) {
     let connection;
     try {
-      const seqId = await getNextSeqValue('seq_campanas'); // Asumiendo que tienes esta secuencia
+      const seqId = await getNextSeqValue('seq_campanias'); // Asumiendo que tienes esta secuencia
       data.id = seqId;
 
       connection = await getConnection();
       await connection.execute(
-        `INSERT INTO Campanas (id, nombre, descripcion, fecha_inicio, fecha_fin, estado) 
+        `INSERT INTO campanias (id, nombre, descripcion, fecha_inicio, fecha_fin, estado) 
          VALUES (:id, :nombre, :descripcion, :fecha_inicio, :fecha_fin, :estado)`,
         {
           id: data.id,
@@ -37,7 +37,7 @@ class Campana {
     try {
       connection = await getConnection();
       const result = await connection.execute(
-        `SELECT * FROM Campanas`,
+        `SELECT * FROM campanias`,
         [],
         { outFormat: oracledb.OBJECT }
       );
@@ -55,7 +55,7 @@ class Campana {
     try {
       connection = await getConnection();
       const result = await connection.execute(
-        `SELECT * FROM Campanas WHERE id = :id`,
+        `SELECT * FROM campanias WHERE id = :id`,
         [id],
         { outFormat: oracledb.OBJECT }
       );
@@ -73,7 +73,7 @@ class Campana {
     try {
       connection = await getConnection();
       const result = await connection.execute(
-        `SELECT * FROM Campanas WHERE LOWER(nombre) LIKE '%' || LOWER(:nombre) || '%'`,
+        `SELECT * FROM campanias WHERE LOWER(nombre) LIKE '%' || LOWER(:nombre) || '%'`,
         [nombre],
         { outFormat: oracledb.OBJECT }
       );
@@ -91,7 +91,7 @@ class Campana {
     try {
       connection = await getConnection();
       const result = await connection.execute(
-        `UPDATE Campanas 
+        `UPDATE campanias 
          SET nombre = :nombre, descripcion = :descripcion, fecha_inicio = :fecha_inicio, fecha_fin = :fecha_fin, estado = :estado
          WHERE id = :id`,
         {
@@ -118,7 +118,7 @@ class Campana {
     try {
       connection = await getConnection();
       const result = await connection.execute(
-        `DELETE FROM Campanas WHERE id = :id`,
+        `DELETE FROM campanias WHERE id = :id`,
         [id],
         { autoCommit: true }
       );
@@ -131,4 +131,4 @@ class Campana {
   }
 }
 
-module.exports = Campana;
+module.exports = campania;

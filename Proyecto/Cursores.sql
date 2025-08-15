@@ -175,7 +175,7 @@ BEGIN
 END;
 /
 
--- 1. Cursor para recorrer tabla usuarios y asignar roles
+-- 16. Cursor para recorrer tabla usuarios y asignar roles
 
 
 DECLARE

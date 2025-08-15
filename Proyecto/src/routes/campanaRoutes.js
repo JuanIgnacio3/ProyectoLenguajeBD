@@ -1,23 +1,23 @@
 const express = require('express');
 const router = express.Router();
-const campanaController = require('../controllers/campanaController');
+const campaniaController = require('../controllers/campaniaController');
 
 // Obtener todas las campañas
-router.get('/', campanaController.getAllCampanas);
+router.get('/', campaniaController.getAllcampanias);
 
 // Obtener campaña por ID
-router.get('/:id', campanaController.getCampanaById);
+router.get('/:id', campaniaController.getcampaniaById);
 
 // Buscar campañas por nombre (POST)
-router.post('/search', campanaController.searchCampanaByNombre);
+router.post('/search', campaniaController.searchcampaniaByNombre);
 
 // Crear una nueva campaña
-router.post('/', campanaController.createCampana);
+router.post('/', campaniaController.createcampania);
 
 // Actualizar una campaña
-router.put('/:id', campanaController.updateCampana);
+router.put('/:id', campaniaController.updatecampania);
 
 // Eliminar una campaña
-router.delete('/:id', campanaController.deleteCampana);
+router.delete('/:id', campaniaController.deletecampania);
 
 module.exports = router;

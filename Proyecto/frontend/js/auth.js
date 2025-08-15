@@ -15,7 +15,7 @@ document.getElementById('registerButton')?.addEventListener('click', async funct
     }
 
     try {
-        const response = await fetch('http://localhost:5000/api/users', {
+        const response = await fetch('http://localhost:3000/api/users', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json'
@@ -56,35 +56,44 @@ document.getElementById('loginForm')?.addEventListener('submit', async function 
         password: document.getElementById('password').value
     };
 
-    try {
-        const response = await fetch('http://localhost:5000/api/users/auth', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify(formData)
-        });
+   try {
+    const response = await fetch('http://localhost:3000/api/users/auth', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(formData)
+    });
 
-        const data = await response.json();
-        console.log('✅ Usuario recibido desde el backend:', data);
-        if (response.ok) {
-            const user = {
-                id: data.ID,
-                nombre: data.NOMBRE,
-                apellido: data.APELLIDO,
-                email: data.EMAIL,
-                rol: data.ROL
-            };
-            localStorage.setItem('user', JSON.stringify(user)); // <-- Aquí va user, no data
-            window.location.href = 'dashboard.html';
-        }
-        else {
-            document.getElementById('loginError').textContent = data.error || 'Credenciales inválidas';
-        }
-    } catch (error) {
-        document.getElementById('loginError').textContent = 'Error de conexión. Intente nuevamente.';
-        console.error('Login error:', error);
+    const text = await response.text(); // primero lo tratamos como texto
+    console.log('Respuesta del servidor:', text);
+
+    // ahora sí intentar JSON si es correcto
+    let data;
+    try {
+        data = JSON.parse(text);
+    } catch (err) {
+        console.error('No es JSON:', err);
+        document.getElementById('loginError').textContent = 'Error del servidor: respuesta no válida';
+        return;
     }
+
+    if (response.ok) {
+        const user = {
+            id: data.ID,
+            nombre: data.NOMBRE,
+            apellido: data.APELLIDO,
+            email: data.EMAIL,
+            rol: data.ROL
+        };
+        localStorage.setItem('user', JSON.stringify(user));
+        window.location.href = 'dashboard.html';
+    } else {
+        document.getElementById('loginError').textContent = data.error || 'Credenciales inválidas';
+    }
+
+} catch (error) {
+    document.getElementById('loginError').textContent = 'Error de conexión. Intente nuevamente.';
+    console.error('Login error:', error);
+}
 });
 
 // Manejo del logout

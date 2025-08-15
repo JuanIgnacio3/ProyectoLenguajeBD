@@ -1,35 +1,35 @@
-const Campana = require('../models/campana');
+const campania = require('../models/campania');
 
-class CampanaService {
+class campaniaService {
   // Obtener todas las campañas
-  async getAllCampanas() {
-    return await Campana.findAll();
+  async getAllcampanias() {
+    return await campania.findAll();
   }
 
   // Obtener campaña por ID
-  async getCampanaById(id) {
-    return await Campana.findById(id);
+  async getcampaniaById(id) {
+    return await campania.findById(id);
   }
 
   // Buscar campañas por nombre (si aplica)
-  async searchCampanaByNombre(nombre) {
-    return await Campana.searchByNombre(nombre);
+  async searchcampaniaByNombre(nombre) {
+    return await campania.searchByNombre(nombre);
   }
 
   // Crear una nueva campaña
-  async createCampana(data) {
-    return await Campana.create(data);
+  async createcampania(data) {
+    return await campania.create(data);
   }
 
   // Actualizar una campaña
-  async updateCampana(id, data) {
-    return await Campana.update(id, data);
+  async updatecampania(id, data) {
+    return await campania.update(id, data);
   }
 
   // Eliminar una campaña
-  async deleteCampana(id) {
-    return await Campana.delete(id);
+  async deletecampania(id) {
+    return await campania.delete(id);
   }
 }
 
-module.exports = new CampanaService();
+module.exports = new campaniaService();

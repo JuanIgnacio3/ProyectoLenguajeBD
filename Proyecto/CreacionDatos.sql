@@ -1,5 +1,3 @@
--- Insertar datos en las tablas
-
 --1. Insertar roles
 INSERT INTO Roles (id, nombre) VALUES (1, 'Administrador');
 INSERT INTO Roles (id, nombre) VALUES (2, 'Usuario');
@@ -7,17 +5,20 @@ INSERT INTO Roles (id, nombre) VALUES (3, 'Voluntario');
 
 --2. Insertar Usuarios
 INSERT INTO Usuarios (id, nombre, apellido, email, password, telefono, rol) 
-VALUES (1, 'Justin', 'Esquivel', 'jesquivel@email.com', 'jus123', '22222222', 1);
+VALUES (1, 'Justin', 'Esquivel', 'jesquivel@email.com', 'jus12345678', '22222222', 1);
 
 INSERT INTO Usuarios (id, nombre, apellido, email, password, telefono, rol) 
-VALUES (2, 'Juan', 'Gomez', 'jgomez@email.com', 'juan123', '55555555', 2);
+VALUES (2, 'Juan', 'Gomez', 'jgomez@email.com', 'juan12345678', '55555555', 2);
 
 INSERT INTO Usuarios (id, nombre, apellido, email, password, telefono, rol) 
 VALUES (3, 'Oscar', 'Lopez', 'olopez@email.com', 'oscar123', '11111111', 3);
 
+SELECT * FROM MASCOTAS;
+SET DEFINE OFF;
+
 --3. Insertar mascotas
 INSERT INTO Mascotas (id, nombre, raza, edad, descripcion, foto, estado, usuario) 
-VALUES (1, 'Firulais', 'Pastor Aleman', 5, 'Perro muy jugueton', 
+VALUES (1,'Firulais', 'Pastor Aleman', 5, 'Perro muy jugueton', 
 'https://th.bing.com/th/id/R.eb2b1e17c4e858d53155cc2c8aa44c41?rik=wo7SpEIlCdZAcg&riu=http%3a%2f%2fmicompi.com%2fblog%2fwp-content%2fuploads%2f2015%2f02%2fpastor-aleman-02.jpg&ehk=hVI6oY9q93DGK7d4IV0H9WgJpNR%2bJA0V%2bOYog6qvjQw%3d&risl=&pid=ImgRaw&r=0', 
 'Disponible', 1);
 
@@ -100,12 +101,22 @@ VALUES (2, SYSDATE, 20000, 2, 2);
 INSERT INTO Donacionescampanias (id, fecha, cantidad, usuario, campania) 
 VALUES (3, SYSDATE, 30000, 3, 3);
 
+SELECT * FROM INVENTARIO;
+
+-- Eliminar la restricción
+ALTER TABLE Inventario
+DROP CONSTRAINT SYS_C007381;
+
+-- Crear la restricción sin tilde
+ALTER TABLE Inventario
+ADD CONSTRAINT chk_fuente CHECK (fuente IN ('Compra', 'Donacion'));
+
 --9. Insertar inventario
 INSERT INTO Inventario (id, nombre, tipo, cantidad, fechaIngreso, fechaCaducidad, proveedor, fuente) 
 VALUES (1, 'Comida para perro', 'Alimento', 100, SYSDATE, TO_DATE('2025-08-03', 'YYYY-MM-DD'), 'Purina', 'Compra');
 
 INSERT INTO Inventario (id, nombre, tipo, cantidad, fechaIngreso, fechaCaducidad, proveedor, fuente) 
-VALUES (2, 'Comida para gato', 'Alimento', 50, SYSDATE, TO_DATE('2025-06-09', 'YYYY-MM-DD'), 'Whiskas', 'Donaci�n');
+VALUES (2, 'Comida para gato', 'Alimento', 50, SYSDATE, TO_DATE('2025-06-09', 'YYYY-MM-DD'), 'Whiskas', 'Donacion');
 
 INSERT INTO Inventario (id, nombre, tipo, cantidad, fechaIngreso, fechaCaducidad, proveedor, fuente) 
 VALUES (3, 'Pelotas', 'Juguete', 20, SYSDATE, NULL, 'Juguetes S.A.', 'Donacion');
@@ -124,6 +135,9 @@ VALUES (3, 'Zona de juegos', 'Zona de juegos para mascotas', SYSDATE, 'La Sabana
 INSERT INTO EventosAsistencia (id, evento, usuario) VALUES (1, 1, 2);
 INSERT INTO EventosAsistencia (id, evento, usuario) VALUES (2, 1, 3);
 INSERT INTO EventosAsistencia (id, evento, usuario) VALUES (3, 2, 2);
+
+ALTER TABLE Voluntarios
+DROP COLUMN nombre;
 
 --12. Insertar voluntarios
 INSERT INTO Voluntarios (id, usuario, fechaInicio, fechaFin, horas, estado) 

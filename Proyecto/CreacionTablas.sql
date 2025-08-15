@@ -102,7 +102,7 @@ CREATE TABLE Inventario (
     fechaIngreso DATE NOT NULL,
     fechaCaducidad DATE,
     proveedor VARCHAR2(100) NOT NULL,
-    fuente VARCHAR2(20) NOT NULL CHECK (fuente IN ('Compra', 'Donación'))
+    fuente VARCHAR2(20) NOT NULL CHECK (fuente IN ('Compra', 'Donacion'))
 );
 
 --10. Tabla Eventos

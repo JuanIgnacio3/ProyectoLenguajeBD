@@ -1,22 +1,22 @@
-const campanaService = require('../services/campanaService');
+const campaniaService = require('../services/campaniaService');
 
-class CampanaController {
+class campaniaController {
   // Obtener todas las campañas
-  async getAllCampanas(req, res) {
+  async getAllcampanias(req, res) {
     try {
-      const campanas = await campanaService.getAllCampanas();
-      res.status(200).json(campanas);
+      const campanias = await campaniaService.getAllcampanias();
+      res.status(200).json(campanias);
     } catch (error) {
       res.status(400).json({ error: error.message });
     }
   }
 
   // Obtener campaña por ID
-  async getCampanaById(req, res) {
+  async getcampaniaById(req, res) {
     try {
-      const campana = await campanaService.getCampanaById(req.params.id);
-      if (campana) {
-        res.status(200).json(campana);
+      const campania = await campaniaService.getcampaniaById(req.params.id);
+      if (campania) {
+        res.status(200).json(campania);
       } else {
         res.status(404).json({ error: 'Campaña no encontrada' });
       }
@@ -26,31 +26,31 @@ class CampanaController {
   }
 
   // Buscar campañas por nombre
-  async searchCampanaByNombre(req, res) {
+  async searchcampaniaByNombre(req, res) {
     try {
-      const campanas = await campanaService.searchCampanaByNombre(req.body.search);
-      res.status(200).json(campanas);
+      const campanias = await campaniaService.searchcampaniaByNombre(req.body.search);
+      res.status(200).json(campanias);
     } catch (error) {
       res.status(400).json({ error: error.message });
     }
   }
 
   // Crear nueva campaña
-  async createCampana(req, res) {
+  async createcampania(req, res) {
     try {
-      const campana = await campanaService.createCampana(req.body);
-      res.status(201).json(campana);
+      const campania = await campaniaService.createcampania(req.body);
+      res.status(201).json(campania);
     } catch (error) {
       res.status(400).json({ error: error.message });
     }
   }
 
   // Actualizar campaña
-  async updateCampana(req, res) {
+  async updatecampania(req, res) {
     try {
-      const campana = await campanaService.updateCampana(req.params.id, req.body);
-      if (campana) {
-        res.status(200).json(campana);
+      const campania = await campaniaService.updatecampania(req.params.id, req.body);
+      if (campania) {
+        res.status(200).json(campania);
       } else {
         res.status(404).json({ error: 'Campaña no encontrada' });
       }
@@ -60,9 +60,9 @@ class CampanaController {
   }
 
   // Eliminar campaña
-  async deleteCampana(req, res) {
+  async deletecampania(req, res) {
     try {
-      const success = await campanaService.deleteCampana(req.params.id);
+      const success = await campaniaService.deletecampania(req.params.id);
       if (success) {
         res.status(200).json({ message: 'Campaña eliminada correctamente' });
       } else {
@@ -74,4 +74,4 @@ class CampanaController {
   }
 }
 
-module.exports = new CampanaController();
+module.exports = new campaniaController();

@@ -26,11 +26,24 @@ class Usuario {
       );
       return { ...data };
     } catch (err) {
+      if (err.errorNum === 2290) {
+        // Error de CHECK constraint, podemos intentar identificar campo
+        let campo;
+        if (!/^[A-ZÁÉÍÓÚÑ][a-záéíóúñ\s'-]+$/.test(data.nombre)) campo = 'nombre';
+        else if (!/^[A-ZÁÉÍÓÚÑ][a-záéíóúñ\s'-]+$/.test(data.apellido)) campo = 'apellido';
+        else if (!/^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/.test(data.email)) campo = 'email';
+        else if (data.password.length < 8) campo = 'password';
+        else if (!/^[0-9]{8,10}$/.test(data.telefono)) campo = 'telefono';
+        else if (![1, 2, 3].includes(data.rol)) campo = 'rol';
+        throw new Error(`Error de validación en el campo: ${campo}`);
+      }
       throw err;
     } finally {
       await closeConnection(connection);
     }
   }
+
+
 
   // READ (all)
   static async findAll() {
