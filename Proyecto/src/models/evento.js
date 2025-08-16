@@ -36,7 +36,18 @@ class Evento {
     try {
       connection = await getConnection();
       const result = await connection.execute(
-        `SELECT * FROM Eventos ORDER BY fecha DESC`,
+        `SELECT e.id,
+       e.nombre AS nombre,
+       e.descripcion,
+       e.fecha,
+       e.ubicacion,
+       e.tipo,
+       e.estado,
+       u.nombre AS responsable
+FROM Eventos e
+JOIN Usuarios u ON e.responsable = u.id
+ORDER BY e.fecha DESC`,
+
         [],
         { outFormat: oracledb.OBJECT }
       );

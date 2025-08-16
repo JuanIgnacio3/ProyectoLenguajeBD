@@ -6,8 +6,8 @@ const Usuario = require('../models/usuario');
 const authRoutes = require('../routes/authRoutes');
 const usuarioRoutes = require('../routes/usuarioRoutes');
 const oracledb = require('oracledb');
-
-
+const Mascota = require('../models/mascota');
+const Evento = require('../models/evento')
 
 const app = express();
 const PORT = 3000;
@@ -93,7 +93,33 @@ app.post('/api/users/auth', async (req, res) => {
 app.use('/api/auth', authRoutes);
 app.use('/api/usuarios', usuarioRoutes);
 
+
+// Endpoint para obtener todas las mascotas
+app.get('/api/mascotas', async (req, res) => {
+  try {
+    const mascotas = await Mascota.findAll();
+    res.json(mascotas);
+  } catch (err) {
+    console.error('Error al consultar mascotas:', err);
+    res.status(500).json({ error: 'Error al consultar mascotas' });
+  }
+});
+
+
+// Endpoint para obtener todos los eventos
+app.get('/api/eventos', async (req, res) => {
+  try {
+    const eventos = await Evento.findAll();
+    res.json(eventos); // debe devolver JSON
+  } catch (err) {
+    console.error('Error al consultar eventos:', err);
+    res.status(500).json({ error: 'Error al consultar eventos' });
+  }
+});
+
 // Iniciar servidor
 app.listen(PORT, () => {
   console.log(`Servidor corriendo en http://localhost:${PORT}`);
 });
+
+

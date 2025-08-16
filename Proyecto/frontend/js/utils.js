@@ -12,7 +12,12 @@ async function makeRequest(url, method = 'GET', data = null) {
     }
 
     try {
-        const response = await fetch(`http://localhost:5000/api${url}`, options);
+        const response = await fetch(`http://localhost:3000/api${url}`, options);
+        if (!response.ok) {
+            const errorData = await response.json();
+            throw new Error(errorData.message || 'Error en la API');
+        }
+
         return await response.json();
     } catch (error) {
         console.error('Error:', error);
@@ -40,17 +45,17 @@ function clearAuthData() {
 
 // Función para verificar autenticación (modificada)
 function checkAuth() {
-  const user = getAuthData();
-  const currentPage = window.location.pathname.split('/').pop();
-  
-  // Solo redirigir si:
-  // - Usuario no logueado intenta acceder a dashboard
-  if (user && (currentPage === 'login.html' || currentPage === 'register.html')) {
-    window.location.href = 'dashboard.html';
-  } else if (!user && currentPage === 'dashboard.html') {
-    window.location.href = 'login.html';
-  }
-  // No hacer nada para la página principal (index.html)
+    const user = getAuthData();
+    const currentPage = window.location.pathname.split('/').pop();
+
+    // Solo redirigir si:
+    // - Usuario no logueado intenta acceder a dashboard
+    if (user && (currentPage === 'login.html' || currentPage === 'register.html')) {
+        window.location.href = 'dashboard.html';
+    } else if (!user && currentPage === 'dashboard.html') {
+        window.location.href = 'login.html';
+    }
+    // No hacer nada para la página principal (index.html)
 }
 
 

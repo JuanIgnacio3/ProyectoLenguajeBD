@@ -39,7 +39,7 @@ class Mascota {
     try {
       connection = await getConnection();
       const result = await connection.execute(
-        `SELECT m.id, m.nombre, m.raza, m.edad, m.estado, u.nombre AS dueno
+        `SELECT m.id, m.nombre, m.raza, m.edad, m.estado, m.descripcion, m.foto, u.nombre AS dueno
          FROM Mascotas m
          JOIN Usuarios u ON m.usuario = u.id
          ORDER BY m.nombre`,
