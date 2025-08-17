@@ -72,7 +72,7 @@ async function cargarCampanias() {
     const response = await fetch('http://localhost:3000/api/campanias');
     const campanias = await response.json();
 
-      campanias.forEach(campania => {
+    campanias.forEach(campania => {
       const row = document.createElement('tr');
       row.innerHTML = `
        <td>${campania.NOMBRE}</td>
@@ -92,10 +92,74 @@ async function cargarCampanias() {
   }
 }
 
+async function cargarInventarios() {
+  const tabla = document.getElementById('inventariosTable');
+  tabla.innerHTML = '';
+
+  try {
+    const response = await fetch('http://localhost:3000/api/inventarios');
+    const inventarios = await response.json();
+
+    inventarios.forEach(item => {
+      const row = document.createElement('tr');
+      row.innerHTML = `
+        <td>${item.NOMBRE}</td>
+        <td>${item.TIPO}</td>
+        <td>${item.CANTIDAD}</td>
+        <td>${item.FECHAINGRESO ? new Date(item.FECHAINGRESO).toLocaleDateString() : ''}</td>
+        <td>${item.FECHACADUCIDAD ? new Date(item.FECHACADUCIDAD).toLocaleDateString() : ''}</td>
+        <td>${item.PROVEEDOR}</td>
+        <td>${item.FUENTE}</td>
+        <td>
+          <button class="btn btn-info btn-sm"><i class="fas fa-edit"></i></button>
+          <button class="btn btn-danger btn-sm"><i class="fas fa-trash-alt"></i></button>
+        </td>
+      `;
+      tabla.appendChild(row);
+    });
+  } catch (err) {
+    console.error('Error cargando inventarios:', err);
+    tabla.innerHTML = '<tr><td colspan="8">Error cargando inventarios</td></tr>';
+  }
+}
+
+async function cargarVoluntarios() {
+  const tabla = document.getElementById('voluntariosTable');
+  tabla.innerHTML = '';
+
+  try {
+    const response = await fetch('http://localhost:3000/api/voluntarios');
+    const voluntarios = await response.json();
+
+    voluntarios.forEach(item => {
+      const row = document.createElement('tr');
+      row.innerHTML = `
+        <td>${item.NOMBRE}</td>
+        <td>${item.FECHAINICIO ? new Date(item.FECHAINICIO).toLocaleDateString() : ''}</td>
+        <td>${item.FECHAFIN ? new Date(item.FECHAFIN).toLocaleDateString() : ''}</td>
+        <td>${item.HORAS}</td>
+        <td>${item.ESTADO}</td>
+        <td>
+          <button class="btn btn-info btn-sm"><i class="fas fa-edit"></i></button>
+          <button class="btn btn-danger btn-sm"><i class="fas fa-trash-alt"></i></button>
+        </td>
+      `;
+      tabla.appendChild(row);
+    });
+  } catch (err) {
+    console.error('Error cargando voluntarios:', err);
+    tabla.innerHTML = '<tr><td colspan="6">Error cargando voluntarios</td></tr>';
+  }
+}
+
+
+
 // Ejecutar al cargar la página
 document.addEventListener('DOMContentLoaded', () => {
   cargarMascotas(); // tu función anterior
   cargarEventos();  // nueva función
   cargarCampanias();
+  cargarInventarios();
+  cargarVoluntarios();
 });
 

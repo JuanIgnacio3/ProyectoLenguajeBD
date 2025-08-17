@@ -9,6 +9,10 @@ const oracledb = require('oracledb');
 const Mascota = require('../models/mascota');
 const Evento = require('../models/evento');
 const Campania = require('../models/campania');
+const Inventario = require('../models/inventario');
+const Voluntario = require('../models/voluntario');
+
+
 
 const app = express();
 const PORT = 3000;
@@ -126,6 +130,28 @@ app.get('/api/campanias', async (req, res) => {
   } catch (err) {
     console.error('Error al consultar campanias:', err);
     res.status(500).json({ error: 'Error al consultar campanias' });
+  }
+});
+
+// Endpoint para obtener Inventarios
+app.get('/api/inventarios', async (req, res) => {
+  try {
+    const inventarios = await Inventario.findAll();
+    res.json(inventarios); // debe devolver JSON
+  } catch (err) {
+    console.error('Error al consultar inventarios:', err);
+    res.status(500).json({ error: 'Error al consultar inventarios' });
+  }
+});
+
+// Endpoint para obtener Voluntarios
+app.get('/api/voluntarios', async (req, res) => {
+  try {
+    const voluntarios = await Voluntario.findAll();
+    res.json(voluntarios); // debe devolver JSON
+  } catch (err) {
+    console.error('Error al consultar voluntarios:', err);
+    res.status(500).json({ error: 'Error al consultar voluntarios' });
   }
 });
 

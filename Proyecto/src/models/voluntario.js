@@ -32,13 +32,23 @@ class Voluntario {
     }
   }
 
-  // READ (all)
+  // READ (all) 
   static async findAll() {
     let connection;
     try {
       connection = await getConnection();
       const result = await connection.execute(
-        `SELECT * FROM Voluntarios`,
+        `SELECT v.id,
+       v.usuario,
+       v.fechainicio,
+       v.fechafin,
+       v.horas,
+       v.estado,
+       u.nombre || ' ' || u.apellido AS nombre
+FROM Voluntarios v
+JOIN Usuarios u ON v.usuario = u.id
+ORDER BY v.usuario
+`,
         [],
         { outFormat: oracledb.OBJECT }
       );
@@ -49,6 +59,7 @@ class Voluntario {
       await closeConnection(connection);
     }
   }
+
 
   // READ (by id)
   static async findById(id) {
