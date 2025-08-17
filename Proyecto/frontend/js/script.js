@@ -1,3 +1,4 @@
+
 async function cargarMascotas() {
   const tabla = document.getElementById('mascotasTable');
   tabla.innerHTML = '';
@@ -35,14 +36,16 @@ async function cargarEventos() {
 
   try {
     const response = await fetch('http://localhost:3000/api/eventos');
-    const eventos = await response.json();
+    if (!response.ok) throw new Error("Error en la API de eventos");
 
+    const eventos = await response.json();
+    console.log("Eventos desde API:", eventos);
     eventos.forEach(evento => {
       const row = document.createElement('tr');
       row.innerHTML = `
         <td>${evento.NOMBRE}</td>
         <td>${evento.DESCRIPCION}</td>
-        <td>${evento.FECHA}</td>
+        <td>${new Date(evento.FECHA).toLocaleDateString()}</td>
         <td>${evento.UBICACION}</td>
         <td>${evento.RESPONSABLE}</td>
         <td>${evento.TIPO}</td>
@@ -60,9 +63,39 @@ async function cargarEventos() {
   }
 }
 
+
+async function cargarCampanias() {
+  const tabla = document.getElementById('campaniasTable');
+  tabla.innerHTML = '';
+
+  try {
+    const response = await fetch('http://localhost:3000/api/campanias');
+    const campanias = await response.json();
+
+      campanias.forEach(campania => {
+      const row = document.createElement('tr');
+      row.innerHTML = `
+       <td>${campania.NOMBRE}</td>
+       <td>${new Date(campania.FECHAINICIO).toLocaleDateString()}</td>
+       <td>${new Date(campania.FECHAFIN).toLocaleDateString()}</td>
+       <td>${campania.DESCRIPCION}</td>
+        <td>
+          <button class="btn btn-info btn-sm"><i class="fas fa-edit"></i></button>
+          <button class="btn btn-danger btn-sm"><i class="fas fa-trash-alt"></i></button>
+        </td>
+      `;
+      tabla.appendChild(row);
+    });
+  } catch (err) {
+    console.error('Error cargando campañas:', err);
+    tabla.innerHTML = '<tr><td colspan="5">Error cargando campañas</td></tr>';
+  }
+}
+
 // Ejecutar al cargar la página
 document.addEventListener('DOMContentLoaded', () => {
   cargarMascotas(); // tu función anterior
   cargarEventos();  // nueva función
+  cargarCampanias();
 });
 

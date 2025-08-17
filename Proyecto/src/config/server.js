@@ -7,7 +7,8 @@ const authRoutes = require('../routes/authRoutes');
 const usuarioRoutes = require('../routes/usuarioRoutes');
 const oracledb = require('oracledb');
 const Mascota = require('../models/mascota');
-const Evento = require('../models/evento')
+const Evento = require('../models/evento');
+const Campania = require('../models/campania');
 
 const app = express();
 const PORT = 3000;
@@ -114,6 +115,17 @@ app.get('/api/eventos', async (req, res) => {
   } catch (err) {
     console.error('Error al consultar eventos:', err);
     res.status(500).json({ error: 'Error al consultar eventos' });
+  }
+});
+
+// Endpoint para obtener campanias
+app.get('/api/campanias', async (req, res) => {
+  try {
+    const campanias = await Campania.findAll();
+    res.json(campanias); // debe devolver JSON
+  } catch (err) {
+    console.error('Error al consultar campanias:', err);
+    res.status(500).json({ error: 'Error al consultar campanias' });
   }
 });
 
