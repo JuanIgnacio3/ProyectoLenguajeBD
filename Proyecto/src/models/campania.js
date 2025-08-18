@@ -1,115 +1,205 @@
+
+
 const oracledb = require('oracledb');
 const { getConnection, closeConnection, getNextSeqValue } = require('../config/db');
 
-class campania {
+class Campania {
+
+  static toNumber(value, nombreCampo) {
+    const num = Number(value);
+    if (isNaN(num)) throw new Error(`El campo ${nombreCampo} debe ser un número`);
+    return num;
+  }
+
   // CREATE
   static async create(data) {
     let connection;
     try {
-      const seqId = await getNextSeqValue('seq_campanias'); // Asumiendo que tienes esta secuencia
-      data.id = seqId;
+      const idNum = await getNextSeqValue('seq_campanias');
+      data.id = idNum;
+
+      const objetivoNum = this.toNumber(data.objetivo, "objetivo");
+      const usuarioNum = this.toNumber(data.usuario, "usuario");
 
       connection = await getConnection();
       await connection.execute(
-        `INSERT INTO campanias (id, nombre, descripcion, fecha_inicio, fecha_fin, estado) 
-         VALUES (:id, :nombre, :descripcion, :fecha_inicio, :fecha_fin, :estado)`,
+        `BEGIN sp_create_campania(
+          :p_nombre, :p_descripcion, :p_FECHAINICIO, :p_FECHAFIN, 
+          :p_objetivo, :p_estado, :p_usuario, :p_id
+        ); END;`,
         {
-          id: data.id,
-          nombre: data.nombre,
-          descripcion: data.descripcion,
-          fecha_inicio: data.fecha_inicio,
-          fecha_fin: data.fecha_fin,
-          estado: data.estado
-        },
-        { autoCommit: true }
+          p_nombre: data.nombre,
+          p_descripcion: data.descripcion,
+          p_FECHAINICIO: new Date(data.fecha_inicio),
+          p_FECHAFIN: new Date(data.fecha_fin),
+          p_objetivo: objetivoNum,
+          p_estado: data.estado,
+          p_usuario: usuarioNum,
+          p_id: { dir: oracledb.BIND_OUT, type: oracledb.NUMBER }
+        }
       );
+      data.id = data.id; // El id ya viene de la secuencia
       return { ...data };
+
     } catch (err) {
+      console.error("Error en Campania.create():", err);
       throw err;
     } finally {
-      await closeConnection(connection);
+      if (connection) await closeConnection(connection);
     }
   }
 
-  // READ (all)
+  // READ ALL
   static async findAll() {
     let connection;
+    let cursor;
     try {
       connection = await getConnection();
       const result = await connection.execute(
-        `SELECT * FROM campanias`,
-        [],
-        { outFormat: oracledb.OBJECT }
+        `BEGIN sp_get_all_campanias(:p_cursor); END;`,
+        { p_cursor: { dir: oracledb.BIND_OUT, type: oracledb.CURSOR } }
       );
-      return result.rows;
+      cursor = result.outBinds.p_cursor;
+      const rows = await cursor.getRows();
+      await cursor.close();
+      return rows;
     } catch (err) {
+      console.error("Error en Campania.findAll():", err);
       throw err;
     } finally {
-      await closeConnection(connection);
+      if (connection) await closeConnection(connection);
     }
   }
 
-  
-  // READ (by id)
+  // READ Activas
+  static async findAllActivas() {
+    let connection;
+    let cursor;
+    try {
+      connection = await getConnection();
+      const result = await connection.execute(
+        `BEGIN sp_get_campanias_activas(:p_cursor); END;`,
+        { p_cursor: { dir: oracledb.BIND_OUT, type: oracledb.CURSOR } }
+      );
+      cursor = result.outBinds.p_cursor;
+      const rows = await cursor.getRows();
+      await cursor.close();
+      return rows;
+    } catch (err) {
+      console.error("Error en Campania.findAllActivas():", err);
+      throw err;
+    } finally {
+      if (connection) await closeConnection(connection);
+    }
+  }
+
+  // READ Inactivas
+  static async findAllInactivas() {
+    let connection;
+    let cursor;
+    try {
+      connection = await getConnection();
+      const result = await connection.execute(
+        `BEGIN sp_get_campanias_inactivas(:p_cursor); END;`,
+        { p_cursor: { dir: oracledb.BIND_OUT, type: oracledb.CURSOR } }
+      );
+      cursor = result.outBinds.p_cursor;
+      const rows = await cursor.getRows();
+      await cursor.close();
+      return rows;
+    } catch (err) {
+      console.error("Error en Campania.findAllInactivas():", err);
+      throw err;
+    } finally {
+      if (connection) await closeConnection(connection);
+    }
+  }
+
+  // READ BY ID
   static async findById(id) {
     let connection;
+    let cursor;
     try {
+      const idNum = this.toNumber(id, "id");
       connection = await getConnection();
+
       const result = await connection.execute(
-        `SELECT * FROM campanias WHERE id = :id`,
-        [id],
-        { outFormat: oracledb.OBJECT }
+        `BEGIN sp_get_campania_by_id(:p_id, :p_cursor); END;`,
+        {
+          p_id: idNum,
+          p_cursor: { dir: oracledb.BIND_OUT, type: oracledb.CURSOR }
+        }
       );
-      return result.rows[0];
+
+      cursor = result.outBinds.p_cursor;
+      const rows = await cursor.getRows();
+      await cursor.close();
+      return rows[0] || null;
+
     } catch (err) {
+      console.error("Error en Campania.findById():", err);
       throw err;
     } finally {
-      await closeConnection(connection);
+      if (connection) await closeConnection(connection);
     }
   }
 
-  // SEARCH (by nombre)
-  static async searchByNombre(nombre) {
-    let connection;
-    try {
-      connection = await getConnection();
-      const result = await connection.execute(
-        `SELECT * FROM campanias WHERE LOWER(nombre) LIKE '%' || LOWER(:nombre) || '%'`,
-        [nombre],
-        { outFormat: oracledb.OBJECT }
-      );
-      return result.rows;
-    } catch (err) {
-      throw err;
-    } finally {
-      await closeConnection(connection);
-    }
+    // READ BY ID
+  static async getTotalRecaudado(id) {
+  let connection;
+  try {
+    const idNum = this.toNumber(id, "id"); // asegúrate de que sea número
+    connection = await getConnection();    // usa tu conexión existente
+
+    const result = await connection.execute(
+      `SELECT fn_campania_recaudado(:id) AS total FROM dual`,
+      { id: idNum }, // pasamos el id que recibe la función
+      { outFormat: oracledb.OUT_FORMAT_OBJECT }
+    );
+
+    return result.rows[0].TOTAL; // devuelve solo el número
+  } catch (err) {
+    console.error(`Error en Campania.getTotalRecaudado(${id}):`, err);
+    throw err;
+  } finally {
+    if (connection) await closeConnection(connection);
   }
+}
+
 
   // UPDATE
   static async update(id, data) {
     let connection;
     try {
+      const idNum = this.toNumber(id, "id");
+      const objetivoNum = this.toNumber(data.objetivo, "objetivo");
+      const usuarioNum = this.toNumber(data.usuario, "usuario");
+
       connection = await getConnection();
-      const result = await connection.execute(
-        `UPDATE campanias 
-         SET nombre = :nombre, descripcion = :descripcion, fecha_inicio = :fecha_inicio, fecha_fin = :fecha_fin, estado = :estado
-         WHERE id = :id`,
+      await connection.execute(
+        `BEGIN sp_update_campania(
+          :p_id, :p_nombre, :p_descripcion, :p_FECHAINICIO, :p_FECHAFIN, 
+          :p_objetivo, :p_estado, :p_usuario
+        ); END;`,
         {
-          id,
-          nombre: data.nombre,
-          descripcion: data.descripcion,
-          fecha_inicio: data.fecha_inicio,
-          fecha_fin: data.fecha_fin,
-          estado: data.estado
-        },
-        { autoCommit: true }
+          p_id: idNum,
+          p_nombre: data.nombre,
+          p_descripcion: data.descripcion,
+          p_FECHAINICIO: new Date(data.fecha_inicio),
+          p_FECHAFIN: new Date(data.fecha_fin),
+          p_objetivo: objetivoNum,
+          p_estado: data.estado,
+          p_usuario: usuarioNum
+        }
       );
-      return result.rowsAffected > 0 ? { id, ...data } : null;
+
+      return { ...data, id: idNum };
+
     } catch (err) {
+      console.error("Error en Campania.update():", err);
       throw err;
     } finally {
-      await closeConnection(connection);
+      if (connection) await closeConnection(connection);
     }
   }
 
@@ -117,19 +207,62 @@ class campania {
   static async delete(id) {
     let connection;
     try {
+      const idNum = this.toNumber(id, "id");
       connection = await getConnection();
-      const result = await connection.execute(
-        `DELETE FROM campanias WHERE id = :id`,
-        [id],
-        { autoCommit: true }
+
+      await connection.execute(
+        `BEGIN sp_delete_campania(:p_id); END;`,
+        { p_id: idNum }
       );
-      return result.rowsAffected > 0;
+
+      return true;
+
     } catch (err) {
+      console.error("Error en Campania.delete():", err);
       throw err;
     } finally {
-      await closeConnection(connection);
+      if (connection) await closeConnection(connection);
+    }
+  }
+
+
+  static async getPorcentajeAvance(id) {
+    let connection;
+    try {
+      const idNum = this.toNumber(id, "id");
+      connection = await getConnection();
+      const result = await connection.execute(
+        `SELECT fn_campania_porcentaje(:id) AS porcentaje FROM dual`,
+        { id: idNum },
+        { outFormat: oracledb.OUT_FORMAT_OBJECT }
+      );
+      return result.rows[0].PORCENTAJE;
+    } catch (err) {
+      console.error(`Error en Campania.getPorcentajeAvance(${id}):`, err);
+      throw err;
+    } finally {
+      if (connection) await closeConnection(connection);
+    }
+  }
+
+  static async getDiasRestantes(id) {
+    let connection;
+    try {
+      const idNum = this.toNumber(id, "id");
+      connection = await getConnection();
+      const result = await connection.execute(
+        `SELECT fn_dias_restantes_campania(:id) AS dias FROM dual`,
+        { id: idNum },
+        { outFormat: oracledb.OUT_FORMAT_OBJECT }
+      );
+      return result.rows[0].DIAS;
+    } catch (err) {
+      console.error(`Error en Campania.getDiasRestantes(${id}):`, err);
+      throw err;
+    } finally {
+      if (connection) await closeConnection(connection);
     }
   }
 }
 
-module.exports = campania;
+module.exports = Campania;

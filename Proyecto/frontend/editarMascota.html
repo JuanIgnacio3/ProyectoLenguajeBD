@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Editar Mascota - Dejando Huella</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+</head>
+<body>
+    <header class="header d-flex align-items-center sticky-top">
+        <div class="container-fluid container-xl position-relative d-flex align-items-center justify-content-between">
+            <a href="index.html" class="logo d-flex align-items-center me-auto">
+                <h1 class="sitename">Dejando Huella</h1>
+            </a>
+            <nav class="navmenu">
+                <ul>
+                    <li><a href="index.html">Inicio</a></li>
+                    <li><a href="mascotas.html">Mascotas</a></li>
+                    <li><a href="eventos.html">Eventos</a></li>
+                    <li><a href="campanias.html">Campañas</a></li>
+                    <li><a href="inventarios.html">Inventarios</a></li>
+                    <li><a href="voluntarios.html">Voluntarios</a></li>
+                </ul>
+            </nav>
+        </div>
+    </header>
+
+    <main class="register-container">
+        <div class="auth-form">
+            <h2>Editar Mascota</h2>
+            <form id="editForm" onsubmit="return false;">
+                <div class="form-group">
+                    <label for="nombre">Nombre</label>
+                    <input type="text" class="form-control" id="nombre" name="nombre" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="raza">Raza</label>
+                    <input type="text" class="form-control" id="raza" name="raza" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="edad">Edad</label>
+                    <input type="number" class="form-control" id="edad" name="edad" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="descripcion">Descripción</label>
+                    <input type="text" class="form-control" id="descripcion" name="descripcion" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="foto">Foto (URL)</label>
+                    <input type="url" class="form-control" id="foto" name="foto" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="estado">Estado</label>
+                    <select class="form-control" id="estado" name="estado" required>
+                        <option value="" disabled>Seleccione el estado</option>
+                        <option value="Disponible">Disponible</option>
+                        <option value="Adoptado">Adoptado</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label for="usuario">Usuario</label>
+                    <select class="form-control" id="usuario" name="usuario" required>
+                        <option value="" disabled>Seleccione un usuario</option>
+                    </select>
+                </div>
+
+                <button type="button" id="updateButton" class="btn btn-success btn-block">Actualizar Mascota</button>
+            </form>
+
+            <div id="mascotasError" class="error-message mt-2 text-danger"></div>
+            <div id="mascotasSuccess" class="success-message mt-2 text-success"></div>
+        </div>
+    </main>
+
+    <script>
+    // Obtener ID desde URL
+    const params = new URLSearchParams(window.location.search);
+    const id = params.get('id');
+    console.log('ID de la mascota:', id);
+
+    // Cargar usuarios en el select
+    fetch('/api/usuarios')
+        .then(res => res.json())
+        .then(usuarios => {
+            const select = document.querySelector('#usuario');
+            usuarios.forEach(u => {
+                const option = document.createElement('option');
+                option.value = u.id;
+                option.textContent = u.nombre;
+                select.appendChild(option);
+            });
+        })
+        .catch(err => console.error('Error al cargar usuarios:', err));
+
+    // Cargar datos de la mascota
+    if (id) {
+        fetch(`/api/mascotas/${id}`)
+            .then(res => res.json())
+            .then(data => {
+                // data es un array: [id, nombre, raza, edad, descripcion, foto, estado, usuarioId, usuarioNombre]
+                document.querySelector('#nombre').value = data[1];
+                document.querySelector('#raza').value = data[2];
+                document.querySelector('#edad').value = data[3];
+                document.querySelector('#descripcion').value = data[4];
+                document.querySelector('#foto').value = data[5];
+                document.querySelector('#estado').value = data[6];
+                document.querySelector('#usuario').value = data[7]; // ID del usuario
+            })
+            .catch(err => console.error('Error al cargar la mascota:', err));
+    }
+
+    // Actualizar mascota
+    document.querySelector('#updateButton').addEventListener('click', () => {
+        const form = document.querySelector('#editForm');
+        const formData = new FormData(form);
+        const data = Object.fromEntries(formData.entries());
+
+        fetch(`/api/mascotas/${id}`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(data)
+        })
+        .then(res => res.json())
+        .then(response => {
+            if (response.success) {
+                document.querySelector('#mascotasSuccess').textContent = 'Mascota actualizada correctamente';
+                document.querySelector('#mascotasError').textContent = '';
+                setTimeout(() => window.location.href = 'mascotas.html', 1500);
+            } else {
+                document.querySelector('#mascotasError').textContent = response.message || 'Error al actualizar la mascota';
+                document.querySelector('#mascotasSuccess').textContent = '';
+            }
+        })
+        .catch(err => {
+            console.error(err);
+            document.querySelector('#mascotasError').textContent = 'Error al actualizar la mascota';
+            document.querySelector('#mascotasSuccess').textContent = '';
+        });
+    });
+</script>
+
+
+    <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@4.5.2/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

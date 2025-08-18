@@ -1,0 +1,94 @@
+
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+  <meta charset="UTF-8">
+  <title>Mascotas - Dejando Huella</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="stylesheet" href="css/style.css">
+  <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+</head>
+
+<body>
+  <header class="header d-flex align-items-center sticky-top">
+    <div class="container-fluid container-xl position-relative d-flex align-items-center justify-content-between">
+      <a href="index.html" class="logo d-flex align-items-center me-auto">
+        <h1 class="sitename">Dejando Huella</h1>
+      </a>
+      <nav class="navmenu">
+        <ul>
+          <li><a href="index.html">Inicio</a></li>
+          <li><a href="mascotas.html">Mascotas</a></li>
+          <li><a href="eventos.html">Eventos</a></li>
+          <li><a href="campanias.html" class="active">Campañas</a></li>
+          <li><a href="inventarios.html" class="active">Inventarios</a></li>
+          <li><a href="voluntarios.html">Voluntarios</a></li>
+          <li><a class="btn btn-primary btn-sm text-white" href="register.html">Registro</a></li>
+          <li><a class="btn btn-success btn-sm text-white" href="login.html">Login</a></li>
+        </ul>
+      </nav>
+    </div>
+  </header>
+
+  <main class="container py-5">
+    <h2 class="text-center mb-4">Mascotas Adoptadas</h2>
+
+   
+
+    <div class="table-responsive">
+      <table class="table table-bordered table-striped">
+        <thead class="thead-dark">
+          <tr>
+            <th>ID</th>
+            <th>Nombre de la Mascota</th>
+            <th>Raza</th>
+            <th>Edad</th>
+            <th>Descripción</th>
+            <th>Foto</th>
+            <th>Estado</th>
+            <th>Usuario</th>
+          </tr>
+        </thead>
+        <tbody id="mascotasTable"></tbody>
+      </table>
+    </div>
+  </main>
+
+  <script>
+    fetch('/api/mascotas/adoptadas')
+      .then(res => res.json())
+      .then(mascotas => {
+        const tbody = document.querySelector('#mascotasTable');
+        mascotas.forEach(m => {
+          const row = document.createElement('tr');
+          row.innerHTML = `
+            <td>${m[0]}</td>
+            <td>${m[1]}</td>
+            <td>${m[2]}</td>
+            <td>${m[3]}</td>
+            <td>${m[4]}</td>
+            <td>
+              <img src="${m[5] && m[5].trim() !== '' ? m[5] : 'img/placeholder.png'}" 
+                   alt="${m[0]}" 
+                   width="100">
+            </td>
+            <td>${m[6]}</td>
+            <td>${m[7]}</td>
+      
+          `;
+          tbody.appendChild(row);
+        });
+      })
+      .catch(err => console.error('Error al cargar mascotas:', err));
+
+  </script>
+
+  <footer class="text-center py-3 bg-light">
+    <p>&copy; 2025 Dejando Huella. Todos los derechos reservados.</p>
+  </footer>
+
+</body>
+
+</html>

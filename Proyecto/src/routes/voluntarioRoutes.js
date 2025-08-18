@@ -1,6 +1,6 @@
 const express = require('express');
 const router = express.Router();
-const voluntariosController = require('../controllers/voluntarioController');
+const voluntarioController = require('../controllers/voluntarioController');
 
 // Obtener todos las voluntarios
 router.get('/', voluntarioController.getAllVoluntarios);
@@ -19,5 +19,8 @@ router.put('/:id', voluntarioController.updateVoluntario);
 
 // Eliminar un voluntario
 router.delete('/:id', voluntarioController.deleteVoluntario);
+
+router.get('/:id/horas', voluntarioController.getHoras.bind(voluntarioController));
+router.get('/:id/es-voluntario', voluntarioController.esVoluntario.bind(voluntarioController));
 
 module.exports = router;

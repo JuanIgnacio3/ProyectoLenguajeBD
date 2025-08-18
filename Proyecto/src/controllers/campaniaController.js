@@ -1,20 +1,49 @@
 const campaniaService = require('../services/campaniaService');
 
-class campaniaController {
+class CampaniaController {
   // Obtener todas las campañas
-  async getAllcampanias(req, res) {
+  async getAllCampanias(req, res) {
     try {
-      const campanias = await campaniaService.getAllcampanias();
+      const campanias = await campaniaService.getAllCampanias();
       res.status(200).json(campanias);
     } catch (error) {
-      res.status(400).json({ error: error.message });
+      res.status(500).json({ error: error.message });
+    }
+  }
+
+    // Obtener todas las campañas activas
+  async getAllCampaniasActivas(req, res) {
+    try {
+      const campanias = await campaniaService.getAllCampaniasActivas();
+      res.status(200).json(campanias);
+    } catch (error) {
+      res.status(500).json({ error: error.message });
+    }
+  }
+
+    // Obtener todas las campañas Inactivas
+  async getAllCampaniasInactivas(req, res) {
+    try {
+      const campanias = await campaniaService.getAllCampaniasInactivas();
+      res.status(200).json(campanias);
+    } catch (error) {
+      res.status(500).json({ error: error.message });
+    }
+  }
+
+   async getTotalRecaudado(req, res) {
+    try {
+      const campanias = await campaniaService.getTotalRecaudado(req.params.id);
+      res.status(200).json(campanias);
+    } catch (error) {
+      res.status(500).json({ error: error.message });
     }
   }
 
   // Obtener campaña por ID
-  async getcampaniaById(req, res) {
+  async getCampaniaById(req, res) {
     try {
-      const campania = await campaniaService.getcampaniaById(req.params.id);
+      const campania = await campaniaService.getCampaniaById(req.params.id);
       if (campania) {
         res.status(200).json(campania);
       } else {
@@ -26,9 +55,10 @@ class campaniaController {
   }
 
   // Buscar campañas por nombre
-  async searchcampaniaByNombre(req, res) {
+  async searchCampaniaByNombre(req, res) {
     try {
-      const campanias = await campaniaService.searchcampaniaByNombre(req.body.search);
+      const query = req.query.q || '';
+      const campanias = await campaniaService.searchCampaniaByNombre(query);
       res.status(200).json(campanias);
     } catch (error) {
       res.status(400).json({ error: error.message });
@@ -36,33 +66,40 @@ class campaniaController {
   }
 
   // Crear nueva campaña
-  async createcampania(req, res) {
+  async createCampania(req, res) {
     try {
-      const campania = await campaniaService.createcampania(req.body);
-      res.status(201).json(campania);
+      const campania = await campaniaService.createCampania(req.body);
+      
+      res.status(201).json({ success: true, campania }); // <-- Aquí
     } catch (error) {
-      res.status(400).json({ error: error.message });
+      res.status(400).json({ success: false, message: error.message }); // <-- Y aquí
     }
   }
+
 
   // Actualizar campaña
-  async updatecampania(req, res) {
+  async updateCampania(req, res) {
     try {
-      const campania = await campaniaService.updatecampania(req.params.id, req.body);
-      if (campania) {
-        res.status(200).json(campania);
-      } else {
-        res.status(404).json({ error: 'Campaña no encontrada' });
+      const campania = await campaniaService.updateCampania(req.params.id, req.body);
+      if (!campania) {
+          return res.status(404).json({ success: false, message: 'Campania no encontrada o no se modificaron los datos' });
+        }
+  
+        // Actualización exitosa
+        res.status(200).json({ success: true, campania });
+  
+      } catch (error) {
+        res.status(400).json({ success: false, message: error.message });
       }
-    } catch (error) {
-      res.status(400).json({ error: error.message });
     }
-  }
+
+  
+    
 
   // Eliminar campaña
-  async deletecampania(req, res) {
+  async deleteCampania(req, res) {
     try {
-      const success = await campaniaService.deletecampania(req.params.id);
+      const success = await campaniaService.deleteCampania(req.params.id);
       if (success) {
         res.status(200).json({ message: 'Campaña eliminada correctamente' });
       } else {
@@ -72,6 +109,28 @@ class campaniaController {
       res.status(400).json({ error: error.message });
     }
   }
+
+    async getPorcentajeAvance(req, res) {
+    try {
+      const porcentaje = await campaniaService.getPorcentajeAvance(req.params.id);
+      res.status(200).json({ porcentaje });
+    } catch (error) {
+      res.status(500).json({ error: error.message });
+    }
+  }
+
+  async getDiasRestantes(req, res) {
+    try {
+      const dias = await campaniaService.getDiasRestantes(req.params.id);
+      res.status(200).json({ dias });
+    } catch (error) {
+      res.status(500).json({ error: error.message });
+    }
+  }
+  
 }
 
-module.exports = new campaniaController();
+
+
+
+module.exports = new CampaniaController();

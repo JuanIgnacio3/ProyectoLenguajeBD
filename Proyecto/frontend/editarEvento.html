@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Editar Evento - Dejando Huella</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+</head>
+
+<body>
+    <header class="header d-flex align-items-center sticky-top">
+        <div class="container-fluid container-xl position-relative d-flex align-items-center justify-content-between">
+            <a href="index.html" class="logo d-flex align-items-center me-auto">
+                <h1 class="sitename">Dejando Huella</h1>
+            </a>
+            <nav class="navmenu">
+                <ul>
+                    <li><a href="index.html">Inicio</a></li>
+                    <li><a href="mascotas.html">Mascotas</a></li>
+                    <li><a href="eventos.html" class="active">Eventos</a></li>
+                    <li><a href="campanias.html">Campañas</a></li>
+                    <li><a href="inventarios.html">Inventarios</a></li>
+                    <li><a href="voluntarios.html">Voluntarios</a></li>
+                </ul>
+            </nav>
+        </div>
+    </header>
+
+    <main class="register-container">
+        <div class="auth-form">
+            <h2>Editar Evento</h2>
+            <form id="editForm" onsubmit="return false;">
+                <div class="form-group">
+                    <label for="nombre">Nombre del Evento</label>
+                    <input type="text" class="form-control" id="nombre" name="nombre" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="descripcion">Descripción</label>
+                    <textarea class="form-control" id="descripcion" name="descripcion" required></textarea>
+                </div>
+
+                <div class="form-group">
+                    <label for="fecha">Fecha</label>
+                    <input type="date" class="form-control" id="fecha" name="fecha" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="ubicacion">Ubicación</label>
+                    <input type="text" class="form-control" id="ubicacion" name="ubicacion" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="responsable">Responsable</label>
+                    <input type="text" class="form-control" id="responsable" name="responsable" required>
+                </div>
+
+                <div class="form-group">
+    <label for="tipo">Tipo de evento</label>
+    <select class="form-control" id="tipo" name="tipo" required>
+        <option value="" disabled>Seleccione el tipo</option>
+        <option value="Presencial">Presencial</option>
+        <option value="Virtual">Virtual</option>
+    </select>
+</div>
+
+                <div class="form-group">
+                    <label for="estado">Estado</label>
+                    <select class="form-control" id="estado" name="estado" required>
+                        <option value="" disabled>Seleccione el estado</option>
+                        <option value="En curso">En curso</option>
+                        <option value="Planificado">Planificado</option>
+                        <option value="Finalizado">Finalizado</option>
+                    </select>
+                </div>
+
+                <button type="button" id="updateButton" class="btn btn-success btn-block">Actualizar Evento</button>
+            </form>
+
+            <div id="eventoError" class="error-message mt-2 text-danger"></div>
+            <div id="eventoSuccess" class="success-message mt-2 text-success"></div>
+        </div>
+    </main>
+
+    <script>
+        // Obtener ID desde URL
+        const params = new URLSearchParams(window.location.search);
+        const id = params.get('id');
+
+        // Cargar datos del evento
+        if (id) {
+            fetch(`/api/eventos/${id}`)
+                .then(res => res.json())
+                .then(data => {
+                    // Convertir fecha a formato YYYY-MM-DD
+                    const fechaEvento = new Date(data[3]);
+                    const formatoFecha = (d) => d.toISOString().split('T')[0]; // 'YYYY-MM-DD'
+
+                    document.querySelector('#nombre').value = data[1];
+                    document.querySelector('#descripcion').value = data[2];
+                    document.querySelector('#fecha').value = formatoFecha(fechaEvento);
+                    document.querySelector('#ubicacion').value = data[4];
+                    document.querySelector('#responsable').value = data[5];
+                    document.querySelector('#tipo').value = data[6];
+                    document.querySelector('#estado').value = data[7];
+                })
+                .catch(err => console.error('Error al cargar el evento:', err));
+        }
+
+        // Actualizar evento
+        document.querySelector('#updateButton').addEventListener('click', () => {
+            const form = document.querySelector('#editForm');
+            const formData = new FormData(form);
+            const data = Object.fromEntries(formData.entries());
+
+            fetch(`/api/eventos/${id}`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(data)
+            })
+                .then(res => res.json())
+                .then(response => {
+                    if (response.success) {
+                        document.querySelector('#eventoSuccess').textContent = 'Evento actualizado correctamente';
+                        document.querySelector('#eventoError').textContent = '';
+                        setTimeout(() => window.location.href = 'eventos.html', 1500);
+                    } else {
+                        document.querySelector('#eventoError').textContent = response.message || 'Error al actualizar el evento';
+                        document.querySelector('#eventoSuccess').textContent = '';
+                    }
+                })
+                .catch(err => {
+                    console.error(err);
+                    document.querySelector('#eventoError').textContent = 'Error al actualizar el evento';
+                    document.querySelector('#eventoSuccess').textContent = '';
+                });
+        });
+    </script>
+
+    <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@4.5.2/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+
+</html>

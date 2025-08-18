@@ -1,29 +1,32 @@
-const express = require('express');
+const express = require("express");
 const router = express.Router();
-const usuarioController = require('../controllers/usuarioController');
+const usuarioController = require("../controllers/usuarioController");
 
-// GET all users
-router.get('/users', usuarioController.getAllUsers);
+// Registro de usuario
+router.post("/register", (req, res) => usuarioController.create(req, res));
 
-// GET user by id
-router.get('/users-id/:id', usuarioController.getUserById);
+// Login de usuario
+router.post("/login", (req, res) => usuarioController.login(req, res));
 
-// GET user by email
-router.get('/users-email/:email', usuarioController.getUserByEmail);
+// Buscar usuarios (poner antes de "/:id")
+router.get("/search", (req, res) => usuarioController.search(req, res));
 
-// POST search user that contains name
-router.post('/users-search', usuarioController.searchUserByName);
+// Obtener todos los usuarios
+router.get("/", (req, res) => usuarioController.getAll(req, res));
 
-// POST create user
-router.post('/users', usuarioController.createUser);
+router.get("/usuarios", (req, res) => usuarioController.getAllRoles(req, res));
 
-// PUT update user
-router.put('/users/:id', usuarioController.updateUser);
 
-// DELETE delete user
-router.delete('/users/:id', usuarioController.deleteUser);
+// Obtener un usuario por ID
+router.get("/:id", (req, res) => usuarioController.getById(req, res));
 
-// POST authenticate user
-router.post('/users/auth', usuarioController.authenticateUser);
+// Actualizar usuario
+router.put("/:id", (req, res) => usuarioController.update(req, res));
 
+// Eliminar usuario
+router.delete("/:id", (req, res) => usuarioController.delete(req, res));
+
+router.get('/:id/nombre', usuarioController.getNombreCompleto.bind(usuarioController));
+router.get('/:email/email-valido', usuarioController.emailValido.bind(usuarioController));
+router.get('/:tel/normalizar-telefono', usuarioController.normalizarTelefono.bind(usuarioController));
 module.exports = router;

@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Editar Inventario - Dejando Huella</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+</head>
+<body>
+    <header class="header d-flex align-items-center sticky-top">
+        <div class="container-fluid container-xl position-relative d-flex align-items-center justify-content-between">
+            <a href="index.html" class="logo d-flex align-items-center me-auto">
+                <h1 class="sitename">Dejando Huella</h1>
+            </a>
+            <nav class="navmenu">
+                <ul>
+                    <li><a href="index.html">Inicio</a></li>
+                    <li><a href="mascotas.html">Mascotas</a></li>
+                    <li><a href="eventos.html">Eventos</a></li>
+                    <li><a href="campanias.html">Campañas</a></li>
+                    <li><a href="inventarios.html">Inventarios</a></li>
+                    <li><a href="voluntarios.html">Voluntarios</a></li>
+                </ul>
+            </nav>
+        </div>
+    </header>
+
+    <main class="register-container">
+        <div class="auth-form">
+            <h2>Editar Inventario</h2>
+            <form id="editForm" onsubmit="return false;">
+                <div class="form-group">
+                    <label for="nombre">Nombre del Inventario</label>
+                    <input type="text" class="form-control" id="nombre" name="nombre" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="tipo">Tipo</label>
+                    <input type="text" class="form-control" id="tipo" name="tipo" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="cantidad">Cantidad</label>
+                    <input type="number" class="form-control" id="cantidad" name="cantidad" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="fechaIngreso">Fecha de Ingreso</label>
+                    <input type="date" class="form-control" id="fechaIngreso" name="fechaIngreso" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="fechaCaducidad">Fecha de Caducidad</label>
+                    <input type="date" class="form-control" id="fechaCaducidad" name="fechaCaducidad">
+                </div>
+
+                <div class="form-group">
+                    <label for="proveedor">Proveedor</label>
+                    <input type="text" class="form-control" id="proveedor" name="proveedor">
+                </div>
+
+                <div class="form-group">
+                    <label for="fuente">Fuente</label>
+                    <input type="text" class="form-control" id="fuente" name="fuente">
+                </div>
+
+                <button type="button" id="updateButton" class="btn btn-success btn-block">Actualizar Inventario</button>
+            </form>
+
+            <div id="inventarioError" class="error-message mt-2 text-danger"></div>
+            <div id="inventarioSuccess" class="success-message mt-2 text-success"></div>
+        </div>
+    </main>
+
+    <script>
+        // Obtener ID desde URL
+        const params = new URLSearchParams(window.location.search);
+        const id = params.get('id');
+
+        // Cargar datos del inventario
+        if (id) {
+            fetch(`/api/inventarios/${id}`)
+                .then(res => res.json())
+                .then(data => {
+                    // data es un array: [id, nombre, tipo, cantidad, fechaIngreso, fechaCaducidad, proveedor, fuente]
+                    document.querySelector('#nombre').value = data[1];
+                    document.querySelector('#tipo').value = data[2];
+                    document.querySelector('#cantidad').value = data[3];
+                    document.querySelector('#fechaIngreso').value = data[4] ? new Date(data[4]).toISOString().split('T')[0] : '';
+                    document.querySelector('#fechaCaducidad').value = data[5] ? new Date(data[5]).toISOString().split('T')[0] : '';
+                    document.querySelector('#proveedor').value = data[6];
+                    document.querySelector('#fuente').value = data[7];
+                })
+                .catch(err => console.error('Error al cargar el inventario:', err));
+        }
+
+        // Actualizar inventario
+        document.querySelector('#updateButton').addEventListener('click', () => {
+            const form = document.querySelector('#editForm');
+            const formData = new FormData(form);
+            const data = Object.fromEntries(formData.entries());
+
+            fetch(`/api/inventarios/${id}`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(data)
+            })
+            .then(res => res.json())
+            .then(response => {
+                if (response.success) {
+                    document.querySelector('#inventarioSuccess').textContent = 'Inventario actualizado correctamente';
+                    document.querySelector('#inventarioError').textContent = '';
+                    setTimeout(() => window.location.href = 'inventarios.html', 1500);
+                } else {
+                    document.querySelector('#inventarioError').textContent = response.message || 'Error al actualizar el inventario';
+                    document.querySelector('#inventarioSuccess').textContent = '';
+                }
+            })
+            .catch(err => {
+                console.error(err);
+                document.querySelector('#inventarioError').textContent = 'Error al actualizar el inventario';
+                document.querySelector('#inventarioSuccess').textContent = '';
+            });
+        });
+    </script>
+
+    <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@4.5.2/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

@@ -21,11 +21,9 @@
                     <li><a href="index.html">Inicio</a></li>
                     <li><a href="mascotas.html">Mascotas</a></li>
                     <li><a href="eventos.html">Eventos</a></li>
-                    <li><a href="campanias.html" class="active">Campañas</a></li>
-                                        <li><a href="inventarios.html" class="active">Inventarios</a></li>
-                              <li><a href="voluntarios.html">Voluntarios</a></li>
-
-
+                    <li><a href="campanias.html">Campañas</a></li>
+                    <li><a href="inventarios.html" class="active">Inventarios</a></li>
+                    <li><a href="voluntarios.html">Voluntarios</a></li>
                     <li><a class="btn btn-primary btn-sm text-white" href="register.html">Registro</a></li>
                     <li><a class="btn btn-success btn-sm text-white" href="login.html">Login</a></li>
                 </ul>
@@ -37,35 +35,135 @@
         <h2 class="text-center mb-4">Inventarios</h2>
 
         <div class="mb-4 text-right">
-            <a href="crearInventarios.html" class="btn btn-success"><i class="fas fa-bullhorn"></i> Registrar Inventario</a>
+            <a href="crearInventarios.html" class="btn btn-success">
+                <i class="fas fa-boxes"></i> Registrar Inventario
+            </a>
         </div>
 
         <div class="table-responsive">
             <table class="table table-bordered table-striped">
                 <thead class="thead-dark">
                     <tr>
+                        <th>ID</th>
                         <th>Nombre del Inventario</th>
                         <th>Tipo</th>
                         <th>Cantidad</th>
                         <th>Fecha Ingreso</th>
                         <th>Fecha Caducidad</th>
                         <th>Proveedor</th>
-                        <th>Fuente</th> 
-                        <th>Acciones</th>                       
+                        <th>Fuente</th>
+                        <th>Acciones</th>
                     </tr>
                 </thead>
-                <tbody id="inventariosTable">
-                </tbody>
+                <tbody id="inventariosTable"></tbody>
             </table>
         </div>
     </main>
+
+    <script>
+    // ===============================
+    // Cargar inventarios desde la API
+    // ===============================
+    fetch('/api/inventarios')
+        .then(response => response.json())
+        .then(data => {
+            const tbody = document.querySelector('#inventariosTable');
+            if (!tbody) {
+                console.error('No se encontró la tabla con id="inventariosTable"');
+                return;
+            }
+
+            // Recorrer cada inventario y crear filas dinámicas
+            data.forEach(inv => {
+                const id = inv[0]; // ID real del inventario
+                const nombre = inv[1];
+                const tipo = inv[2];
+                const cantidad = inv[3];
+                const fechaIngreso = inv[4] ? new Date(inv[4]).toLocaleDateString() : '';
+                const fechaCaducidad = inv[5] ? new Date(inv[5]).toLocaleDateString() : '';
+                const proveedor = inv[6];
+                const fuente = inv[7];
+
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${id}</td>
+                    <td>${nombre}</td>
+                    <td>${tipo}</td>
+                    <td>${cantidad}</td>
+                    <td>${fechaIngreso}</td>
+                    <td>${fechaCaducidad}</td>
+                    <td>${proveedor}</td>
+                    <td>${fuente}</td>
+                    <td>
+                        <button class="btn btn-primary btn-sm editar-btn" data-id="${id}">
+                            <i class="fas fa-edit"></i> Editar
+                        </button>
+                        <button class="btn btn-danger btn-sm eliminar-btn" data-id="${id}">
+                            <i class="fas fa-trash-alt"></i> Eliminar
+                        </button>
+                        <button class="btn btn-warning btn-sm vencido-btn" data-id="${id}">
+                            <i class="fas fa-exclamation-triangle"></i> Vencido
+                        </button>
+                    </td>
+                `;
+                tbody.appendChild(row);
+            });
+        })
+        .catch(err => console.error('Error al cargar inventarios:', err));
+
+    // =====================================
+    // Delegación de eventos para botones
+    // =====================================
+    document.querySelector('#inventariosTable').addEventListener('click', (e) => {
+        const button = e.target.closest('button');
+        if (!button) return;
+        const id = button.dataset.id;
+        if (!id) return;
+
+        // Botón eliminar
+        if (button.classList.contains('eliminar-btn')) {
+            if (confirm('¿Seguro que deseas eliminar este inventario?')) {
+                fetch(`/api/inventarios/${id}`, { method: 'DELETE' })
+                    .then(res => {
+                        if (res.ok) {
+                            button.closest('tr').remove(); // eliminar fila sin recargar
+                        } else {
+                            alert('No se pudo eliminar el inventario');
+                        }
+                    })
+                    .catch(err => console.error('Error al eliminar inventario:', err));
+            }
+        }
+
+        // Botón editar
+        else if (button.classList.contains('editar-btn')) {
+            window.location.href = `editarInventario.html?id=${id}`;
+        }
+
+        // Botón vencido
+        else if (button.classList.contains('vencido-btn')) {
+            fetch(`/api/inventarios/${id}/vencido`)
+                .then(res => res.json())
+                .then(data => {
+                    // data.vencido esperado como true/false
+                    if (data.vencido) {
+                        alert(`El inventario ${id} está vencido.`);
+                    } else {
+                        alert(`El inventario ${id} NO está vencido.`);
+                    }
+                })
+                .catch(err => console.error('Error al consultar si el inventario está vencido:', err));
+        }
+    });
+</script>
+
+
 
     <footer class="text-center py-3 bg-light">
         <p>&copy; 2025 Dejando Huella. Todos los derechos reservados.</p>
     </footer>
 
     <script src="js/utils.js"></script>
-    <script src="js/script.js"></script>
 </body>
 
 </html>

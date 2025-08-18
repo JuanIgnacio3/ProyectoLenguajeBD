@@ -23,7 +23,7 @@
           <li><a href="eventos.html">Eventos</a></li>
           <li><a href="campanias.html" class="active">Campañas</a></li>
           <li><a href="inventarios.html">Inventarios</a></li>
-                              <li><a href="voluntarios.html">Voluntarios</a></li>
+          <li><a href="voluntarios.html">Voluntarios</a></li>
 
           <li><a class="btn btn-primary btn-sm text-white" href="register.html">Registro</a></li>
           <li><a class="btn btn-success btn-sm text-white" href="login.html">Login</a></li>
@@ -45,6 +45,8 @@
       <table class="table table-bordered table-striped">
         <thead class="thead-dark">
           <tr>
+            <th>ID</th>
+
             <th>Nombre</th>
             <th>Fecha Inicio</th>
             <th>Fecha Fin</th>
@@ -54,32 +56,96 @@
           </tr>
         </thead>
         <tbody id="voluntariosTable">
-          <tr>
-            <td>Juan Ignacio Vargas Ramirez</td>
-            <td>2025-07-01</td>
-            <td>2025-07-31</td>
-            <td>2</td>
-            <td>Activo</td>
-            <td>
-              <button class="btn btn-info btn-sm" title="Editar voluntario" aria-label="Editar voluntario">
-                <i class="fas fa-edit"></i>
-              </button>
-              <button class="btn btn-danger btn-sm" title="Eliminar voluntario" aria-label="Eliminar voluntario">
-                <i class="fas fa-trash-alt"></i>
-              </button>
-            </td>
-          </tr>
+
         </tbody>
       </table>
     </div>
   </main>
+
+<script>
+    // ===============================
+    // Cargar voluntarios desde la API
+    // ===============================
+    fetch('/api/voluntarios')
+      .then(res => res.json())
+      .then(data => {
+        const tbody = document.querySelector('#voluntariosTable');
+        if (!tbody) {
+          console.error('No se encontró la tabla con id="voluntariosTable"');
+          return;
+        }
+
+        data.forEach(vol => {
+          const id = vol[0];       // ID único
+          const nombre = vol[1];   // Nombre
+          const fechaInicio = vol[2] ? new Date(vol[2]).toLocaleDateString() : '';
+          const fechaFin = vol[3] ? new Date(vol[3]).toLocaleDateString() : '';
+          const horas = vol[4];
+          const estado = vol[5];
+
+          const row = document.createElement('tr');
+          row.innerHTML = `
+            <td>${id}</td>
+            <td>${nombre}</td>
+            <td>${fechaInicio}</td>
+            <td>${fechaFin}</td>
+            <td>${horas}</td>
+            <td>${estado}</td>
+            <td>
+              <button class="btn btn-primary btn-sm editar-btn" data-id="${id}">
+                <i class="fas fa-edit"></i> Editar
+              </button>
+              <button class="btn btn-danger btn-sm eliminar-btn" data-id="${id}">
+                <i class="fas fa-trash-alt"></i> Eliminar
+              </button>
+            </td>
+          `;
+          tbody.appendChild(row);
+        });
+      })
+      .catch(err => console.error('Error al cargar voluntarios:', err));
+
+    // =====================================
+    // Delegación de eventos para botones
+    // =====================================
+    document.querySelector('#voluntariosTable').addEventListener('click', (e) => {
+      // Botón eliminar
+      const delBtn = e.target.closest('.eliminar-btn');
+      if (delBtn) {
+        const id = delBtn.dataset.id;
+        if (!id) return alert('ID de voluntario no válido');
+
+        if (confirm('¿Seguro que deseas eliminar este voluntario?')) {
+          fetch(`/api/voluntarios/${id}`, { method: 'DELETE' })
+            .then(res => {
+              if (res.ok) {
+                delBtn.closest('tr').remove(); // eliminar fila sin recargar
+              } else {
+                alert('No se pudo eliminar el voluntario');
+              }
+            })
+            .catch(err => console.error('Error al eliminar voluntario:', err));
+        }
+      }
+
+      // Botón editar
+      const editBtn = e.target.closest('.editar-btn');
+      if (editBtn) {
+        const id = editBtn.dataset.id;
+        if (!id) return;
+        window.location.href = `editarVoluntario.html?id=${id}`;
+      }
+    });
+</script>
+
+
+
 
   <footer class="text-center py-3 bg-light">
     <p>&copy; 2025 Dejando Huella. Todos los derechos reservados.</p>
   </footer>
 
   <script src="js/utils.js"></script>
-  <script src="js/script.js"></script>
 </body>
 
 </html>

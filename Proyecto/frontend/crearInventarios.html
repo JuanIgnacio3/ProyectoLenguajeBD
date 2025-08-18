@@ -22,8 +22,8 @@
                     <li><a href="mascotas.html">Mascotas</a></li>
                     <li><a href="eventos.html">Eventos</a></li>
                     <li><a href="campanias.html" class="active">Campañas</a></li>
-                                        <li><a href="inventarios.html" class="active">Inventarios</a></li>
-                              <li><a href="voluntarios.html">Voluntarios</a></li>
+                    <li><a href="inventarios.html" class="active">Inventarios</a></li>
+                    <li><a href="voluntarios.html">Voluntarios</a></li>
 
 
                     <li><a class="btn btn-primary btn-sm text-white" href="register.html">Registro</a></li>
@@ -38,27 +38,27 @@
             <form id="registerForm" onsubmit="return false;">
                 <div class="form-group">
                     <label for="nombre">Nombre</label>
-                    <input type="text" class="form-control" id="nombre" name="nombre" 
-                        placeholder="Ingrese el nombre" required>
+                    <input type="text" class="form-control" id="nombre" name="nombre" placeholder="Ingrese el nombre"
+                        required>
                 </div>
                 <div class="form-group">
                     <label for="tipo">Tipo</label>
-                    <input type="text" class="form-control" id="tipo" name="tipo"
-                        placeholder="Ingrese la tipo" required>
+                    <input type="text" class="form-control" id="tipo" name="tipo" placeholder="Ingrese la tipo"
+                        required>
                 </div>
                 <div class="form-group">
                     <label for="cantidad">Cantidad</label>
-                    <input type="number" class="form-control" id="cantidad" name="cantidad" 
+                    <input type="number" class="form-control" id="cantidad" name="cantidad"
                         placeholder="Ingrese la cantidad" required>
                 </div>
                 <div class="form-group">
                     <label for="fechaIngreso">Fecha de Ingreso</label>
-                    <input type="date" class="form-control" id="fechaIngreso" name="fechaIngreso" 
+                    <input type="date" class="form-control" id="fechaIngreso" name="fechaIngreso"
                         placeholder="Ingrese la fecha de ingreso" required>
                 </div>
                 <div class="form-group">
                     <label for="fechaCaducidad">Fecha de Caducidad</label>
-                    <input type="date" class="form-control" id="fechaCaducidad" name="fechaCaducidad" 
+                    <input type="date" class="form-control" id="fechaCaducidad" name="fechaCaducidad"
                         placeholder="Ingrese la fecha de caducidad" required>
                 </div>
                 <div class="form-group">
@@ -67,9 +67,12 @@
                         placeholder="Ingrese el proveedor" required>
                 </div>
                 <div class="form-group">
-                    <label for="fuente">Fuente ('Compra', 'Donación')</label>
-                    <input type="text" class="form-control" id="fuente" name="fuente"
-                        placeholder="Ingrese la fuente" required>
+                    <label for="fuente">Fuente</label>
+                    <select class="form-control" id="fuente" name="fuente" required>
+                        <option value="" disabled selected>Seleccione la fuente</option>
+                        <option value="Compra">Compra</option>
+                        <option value="Donación">Donación</option>
+                    </select>
                 </div>
                 <button type="button" id="Button" class="btn btn-primary btn-block">Crear Inventario</button>
 
@@ -79,8 +82,53 @@
         </div>
     </main>
     <script>
-        // Añadir los scripts del formulario
+        document.querySelector('#Button').addEventListener('click', () => {
+            const form = document.querySelector('#registerForm');
+            const formData = new FormData(form);
+            const data = Object.fromEntries(formData.entries()); // Convertir a objeto
+
+            // Convertir algunos campos a tipos correctos
+            const payload = {
+                nombre: data.nombre,
+                tipo: data.tipo,
+                cantidad: Number(data.cantidad),
+                fechaingreso: data.fechaIngreso,      // <-- minúscula
+                fechacaducidad: data.fechaCaducidad,  // <-- minúscula
+                proveedor: data.proveedor,
+                fuente: data.fuente
+            };
+
+            fetch('/api/inventarios', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(payload)
+            })
+                .then(res => res.json())
+                .then(resData => {
+                    if (resData.success) {
+                        document.querySelector('#inventariosSuccess').textContent = 'Inventario creado correctamente';
+                        document.querySelector('#inventariosError').textContent = '';
+                        form.reset();
+
+                        // Esperar 2 segundos y redirigir a inventarios.html
+                        setTimeout(() => {
+                            window.location.href = 'inventarios.html';
+                        }, 2000);
+                    } else {
+                        document.querySelector('#inventariosError').textContent = resData.message || 'Error al crear el inventario';
+                        document.querySelector('#inventariosSuccess').textContent = '';
+                    }
+                })
+                .catch(err => {
+                    console.error('Error al crear inventario:', err);
+                    document.querySelector('#inventariosError').textContent = 'Error al crear el inventario';
+                    document.querySelector('#inventariosSuccess').textContent = '';
+                });
+        });
     </script>
+
     <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@4.5.2/dist/js/bootstrap.bundle.min.js"></script>
 </body>

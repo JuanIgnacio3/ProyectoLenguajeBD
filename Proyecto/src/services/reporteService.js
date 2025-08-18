@@ -1,4 +1,5 @@
 const Reporte = require('../models/reporte');
+const { getConnection, closeConnection } = require('../config/db');
 
 class ReporteService {
   // Obtener todas las Reportes

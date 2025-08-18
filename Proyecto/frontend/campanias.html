@@ -23,7 +23,7 @@
           <li><a href="eventos.html">Eventos</a></li>
           <li><a href="campanias.html" class="active">Campañas</a></li>
           <li><a href="inventarios.html" class="active">Inventarios</a></li>
-                              <li><a href="voluntarios.html">Voluntarios</a></li>
+          <li><a href="voluntarios.html">Voluntarios</a></li>
 
 
           <li><a class="btn btn-primary btn-sm text-white" href="register.html">Registro</a></li>
@@ -41,27 +41,121 @@
     </div>
 
     <div class="table-responsive">
-      <table class="table table-bordered table-striped">
-        <thead class="thead-dark">
-          <tr>
-            <th>Nombre de la Campaña</th>
-            <th>Fecha Inicio</th>
-            <th>Fecha Fin</th>
-            <th>Descripción</th>
-            <th>Acciones</th>
-          </tr>
-        </thead>
-        <tbody id="campaniasTable"></tbody>
-      </table>
-    </div>
-  </main>
+  <table class="table table-bordered table-striped">
+    <thead class="thead-dark">
+      <tr>
+        <th>ID</th>
+        <th>Nombre de la Campaña</th>
+        <th>Fecha Inicio</th>
+        <th>Fecha Fin</th>
+        <th>Descripción</th>
+        <th>Acciones</th>
+      </tr>
+    </thead>
+    <tbody id="campaniasTable"></tbody>
+  </table>
+</div>
+
+<script>
+  fetch('/api/campanias')
+    .then(res => res.json())
+    .then(campanias => {
+      const tbody = document.querySelector('#campaniasTable');
+      campanias.forEach(c => {
+        const fechaInicio = c[3] ? new Date(c[3]).toLocaleDateString() : '';
+        const fechaFin = c[4] ? new Date(c[4]).toLocaleDateString() : '';
+
+        const row = document.createElement('tr');
+        row.innerHTML = `
+          <td>${c[0]}</td> <!-- ID -->
+          <td>${c[1]}</td> <!-- Nombre -->
+          <td>${fechaInicio}</td> <!-- Fecha Inicio -->
+          <td>${fechaFin}</td> <!-- Fecha Fin -->
+          <td>${c[2]}</td> <!-- Descripción -->
+          <td>
+            <button class="btn btn-primary btn-sm editar-btn" data-id="${c[0]}">
+              <i class="fas fa-edit"></i> Editar
+            </button>
+            <button class="btn btn-danger btn-sm eliminar-btn" data-id="${c[0]}">
+              <i class="fas fa-trash-alt"></i> Eliminar
+            </button>
+            <button class="btn btn-info btn-sm total-btn" data-id="${c[0]}">
+              <i class="fas fa-coins"></i> Total Recaudado
+            </button>
+            <button class="btn btn-warning btn-sm porcentaje-btn" data-id="${c[0]}">
+              <i class="fas fa-chart-line"></i> Porcentaje Avance
+            </button>
+            <button class="btn btn-success btn-sm dias-btn" data-id="${c[0]}">
+              <i class="fas fa-calendar-day"></i> Días Restantes
+            </button>
+          </td>
+        `;
+        tbody.appendChild(row);
+      });
+    })
+    .catch(err => console.error('Error al cargar campañas:', err));
+
+  // Event delegation para botones
+  document.querySelector('#campaniasTable').addEventListener('click', (e) => {
+    const button = e.target.closest('button');
+    if (!button) return;
+    const id = button.dataset.id;
+    if (!id) return;
+
+    // Eliminar
+    if (button.classList.contains('eliminar-btn')) {
+      if (confirm('¿Seguro que deseas eliminar esta campaña?')) {
+        fetch(`/api/campanias/${id}`, { method: 'DELETE' })
+          .then(res => res.ok ? location.reload() : alert('No se pudo eliminar la campaña'))
+          .catch(err => console.error('Error al eliminar campaña:', err));
+      }
+    }
+
+    // Editar
+    else if (button.classList.contains('editar-btn')) {
+      window.location.href = `editarCampania.html?id=${id}`;
+    }
+
+    // Total recaudado
+    else if (button.classList.contains('total-btn')) {
+      fetch(`/api/campanias/${id}/recaudado`)
+        .then(res => res.json())
+        .then(data => {
+          alert(`Total recaudado para la campaña ${id}: $${data.total || data}`);
+        })
+        .catch(err => console.error('Error al obtener total recaudado:', err));
+    }
+
+    // Porcentaje avance
+    else if (button.classList.contains('porcentaje-btn')) {
+      fetch(`/api/campanias/${id}/porcentaje`)
+        .then(res => res.json())
+        .then(data => {
+          alert(`Porcentaje de avance para la campaña ${id}: ${data.porcentaje}%`);
+        })
+        .catch(err => console.error('Error al obtener porcentaje de avance:', err));
+    }
+
+    // Días restantes
+    else if (button.classList.contains('dias-btn')) {
+      fetch(`/api/campanias/${id}/dias`)
+        .then(res => res.json())
+        .then(data => {
+          alert(`Días restantes para la campaña ${id}: ${data.dias}`);
+        })
+        .catch(err => console.error('Error al obtener días restantes:', err));
+    }
+  });
+</script>
+
+
+
 
   <footer class="text-center py-3 bg-light">
     <p>&copy; 2025 Dejando Huella. Todos los derechos reservados.</p>
   </footer>
 
   <script src="js/utils.js"></script>
-  <script src="js/script.js"></script>
 </body>
 
 </html>

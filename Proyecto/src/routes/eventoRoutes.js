@@ -5,6 +5,10 @@ const eventoController = require('../controllers/eventoController');
 // Obtener todos los eventos
 router.get('/', eventoController.getAllEventos);
 
+router.get('/virtuales', eventoController.getAllEventosVirtuales);
+
+router.get('/presenciales', eventoController.getAllEventosPresenciales);
+
 // Obtener evento por ID
 router.get('/:id', eventoController.getEventoById);
 
@@ -19,5 +23,9 @@ router.put('/:id', eventoController.updateEvento);
 
 // Eliminar un evento
 router.delete('/:id', eventoController.deleteEvento);
+
+
+router.get('/:id/estado', eventoController.getEstadoTexto.bind(eventoController)); 
+router.get('/:id/asistentes', eventoController.getAsistentes.bind(eventoController)); 
 
 module.exports = router;

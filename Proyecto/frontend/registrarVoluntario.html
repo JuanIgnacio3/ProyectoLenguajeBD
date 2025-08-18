@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Registrar Voluntario - Dejando Huella</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+</head>
+
+<body>
+    <header class="header d-flex align-items-center sticky-top">
+        <div class="container-fluid container-xl position-relative d-flex align-items-center justify-content-between">
+            <a href="index.html" class="logo d-flex align-items-center me-auto">
+                <h1 class="sitename">Dejando Huella</h1>
+            </a>
+            <nav class="navmenu">
+                <ul>
+                    <li><a href="index.html">Inicio</a></li>
+                    <li><a href="mascotas.html">Mascotas</a></li>
+                    <li><a href="eventos.html">Eventos</a></li>
+                    <li><a href="campanias.html">Campañas</a></li>
+                    <li><a href="inventarios.html">Inventarios</a></li>
+                    <li><a href="voluntarios.html" class="active">Voluntarios</a></li>
+                    <li><a class="btn btn-primary btn-sm text-white" href="register.html">Registro</a></li>
+                    <li><a class="btn btn-success btn-sm text-white" href="login.html">Login</a></li>
+                </ul>
+            </nav>
+        </div>
+    </header>
+
+    <main class="register-container">
+        <div class="auth-form">
+            <h2>Registrar Voluntario</h2>
+            <form id="registerForm" onsubmit="return false;">
+                <div class="form-group">
+                    <label for="usuario">Usuario</label>
+                    <select class="form-control" id="usuario" name="usuario" required>
+                        <option value="" disabled selected>Seleccione un usuario</option>
+                        <!-- JS llenará las opciones -->
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="fechainicio">Fecha de Inicio</label>
+                    <input type="date" class="form-control" id="fechainicio" name="fechainicio" required>
+                </div>
+                <div class="form-group">
+                    <label for="fechafin">Fecha de Fin</label>
+                    <input type="date" class="form-control" id="fechafin" name="fechafin">
+                </div>
+                <div class="form-group">
+                    <label for="horas">Horas</label>
+                    <input type="number" class="form-control" id="horas" name="horas" required>
+                </div>
+                <div class="form-group">
+                    <label for="estado">Estado</label>
+                    <select class="form-control" id="estado" name="estado" required>
+                        <option value="" disabled selected>Seleccione el estado</option>
+                        <option value="Activo">Activo</option>
+                        <option value="Inactivo">Inactivo</option>
+                    </select>
+                </div>
+                <button type="button" id="Button" class="btn btn-primary btn-block">Registrar Voluntario</button>
+            </form>
+            <div id="voluntarioError" class="error-message"></div>
+            <div id="voluntarioSuccess" class="success-message"></div>
+        </div>
+    </main>
+
+   <script>
+    // Cargar usuarios en el select
+    fetch('/api/usuarios')
+        .then(res => res.json())
+        .then(usuarios => {
+            const select = document.querySelector('#usuario');
+            usuarios.forEach(u => {
+                const option = document.createElement('option');
+                option.value = u.id;
+                option.textContent = u.nombre;
+                select.appendChild(option);
+            });
+        })
+        .catch(err => console.error('Error al cargar usuarios:', err));
+
+    // Crear voluntario
+    document.querySelector('#Button').addEventListener('click', () => {
+        const form = document.querySelector('#registerForm');
+        const formData = new FormData(form);
+        const data = Object.fromEntries(formData.entries());
+
+        const payload = {
+            usuario: Number(data.usuario),
+            fecha_inicio: data.fechainicio,
+            fecha_fin: data.fechafin || null, // permitir que sea opcional
+            horas: Number(data.horas),
+            estado: data.estado
+        };
+
+        fetch('/api/voluntarios', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload)
+        })
+        .then(res => res.json())
+        .then(resData => {
+            if (resData.success) {
+                document.querySelector('#voluntarioSuccess').textContent = 'Voluntario registrado correctamente';
+                document.querySelector('#voluntarioError').textContent = '';
+                form.reset();
+                setTimeout(() => window.location.href = 'voluntarios.html', 2000);
+            } else {
+                document.querySelector('#voluntarioError').textContent = resData.message || 'Error al registrar voluntario';
+                document.querySelector('#voluntarioSuccess').textContent = '';
+            }
+        })
+        .catch(err => {
+            console.error('Error al registrar voluntario:', err);
+            document.querySelector('#voluntarioError').textContent = 'Error al registrar voluntario';
+            document.querySelector('#voluntarioSuccess').textContent = '';
+        });
+    });
+</script>
+
+
+    <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@4.5.2/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+
+</html>

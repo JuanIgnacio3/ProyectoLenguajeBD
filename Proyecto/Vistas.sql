@@ -1,173 +1,222 @@
--- Vista de Mascotas Disponibles para Adopción
-CREATE OR REPLACE VIEW vista_mascotas_disponibles AS
+
+  --NUEVAS VISTAS
+
+  CREATE OR REPLACE VIEW vista_mascotas AS
 SELECT 
     m.id,
-    m.nombre,
+    m.nombre AS nombre_mascota,
     m.raza,
     m.edad,
     m.descripcion,
     m.foto,
-    u.nombre || ' ' || u.apellido AS contacto,
-    u.telefono AS telefono_contacto
-FROM 
-    Mascotas m
-JOIN 
-    Usuarios u ON m.usuario = u.id
-WHERE 
-    m.estado = 'Disponible'
-ORDER BY 
-    m.nombre;
-    
--- Vista de campanias Activas con Progreso
-CREATE OR REPLACE VIEW vista_campanias_activas AS
+    m.estado,
+    u.nombre || ' ' || u.apellido AS usuario
+FROM mascotas m
+JOIN usuarios u ON m.usuario_id = u.id;
+
+CREATE OR REPLACE VIEW vista_mascotas_disponibles AS
 SELECT 
-    c.id,
-    c.nombre,
-    c.descripcion,
-    c.fechaInicio,
-    c.fechaFin,
-    c.objetivo,
-    NVL(SUM(d.cantidad), 0) AS recaudado,
-    ROUND(NVL(SUM(d.cantidad), 0) / c.objetivo * 100, 2) AS porcentaje_completado,
-    u.nombre || ' ' || u.apellido AS responsable,
-    u.telefono AS telefono_contacto
-FROM 
-    campanias c
-LEFT JOIN 
-    Donacionescampanias d ON c.id = d.campania
-JOIN 
-    Usuarios u ON c.usuario = u.id
-WHERE 
-    c.estado = 'Activa'
-GROUP BY 
-    c.id, c.nombre, c.descripcion, c.fechaInicio, c.fechaFin, 
-    c.objetivo, u.nombre, u.apellido, u.telefono
-ORDER BY 
-    c.fechaFin;
-    
---Vista de Historial Médico Completo de Mascotas
-CREATE OR REPLACE VIEW vista_historial_medico AS
-SELECT 
-    m.id AS mascota_id,
-    m.nombre AS mascota_nombre,
+    m.id,
+    m.nombre AS nombre_mascota,
     m.raza,
     m.edad,
-    h.fecha,
-    h.diagnostico,
-    h.tratamiento,
-    h.veterinario,
-    h.observaciones,
-    u.nombre || ' ' || u.apellido AS dueno,
-    u.telefono AS telefono_dueno
-FROM 
-    Mascotas m
-JOIN 
-    HistorialMedico h ON m.id = h.mascota
-JOIN 
-    Usuarios u ON m.usuario = u.id
-WHERE 
-    h.estado = 'Activo'
-ORDER BY 
-    m.nombre, h.fecha DESC;
-    
-    
--- Vista de Voluntarios Activos con sus Actividades
-CREATE OR REPLACE VIEW vista_voluntarios_activos AS
+    m.descripcion,
+    m.foto,
+    m.estado,
+    u.nombre || ' ' || u.apellido AS usuario
+FROM mascotas m
+JOIN usuarios u ON m.usuario = u.id
+WHERE LOWER(m.estado) = 'disponible';
+
+CREATE OR REPLACE VIEW vista_mascotas_adoptadas AS
 SELECT 
-    v.id AS voluntario_id,
-    u.nombre || ' ' || u.apellido AS nombre_voluntario,
-    u.email,
-    u.telefono,
-    v.fechaInicio,
-    v.horas,
-    LISTAGG(va.actividad, ', ') WITHIN GROUP (ORDER BY va.actividad) AS actividades,
-    CASE 
-        WHEN v.fechaFin IS NULL THEN 'Activo'
-        ELSE 'Inactivo'
-    END AS estado
-FROM 
-    Voluntarios v
-JOIN 
-    Usuarios u ON v.usuario = u.id
-LEFT JOIN 
-    VoluntariosActividades va ON v.id = va.voluntario_id
-WHERE 
-    v.estado = 'Activo'
-GROUP BY 
-    v.id, u.nombre, u.apellido, u.email, u.telefono, 
-    v.fechaInicio, v.fechaFin, v.horas, v.estado
-ORDER BY 
-    u.nombre, u.apellido;
-    
---Vista de Eventos Próximos con Asistencia
-CREATE OR REPLACE VIEW vista_eventos_proximos AS
+    m.id,
+    m.nombre AS nombre_mascota,
+    m.raza,
+    m.edad,
+    m.descripcion,
+    m.foto,
+    m.estado,
+    u.nombre || ' ' || u.apellido AS usuario
+FROM mascotas m
+JOIN usuarios u ON m.usuario = u.id
+WHERE LOWER(m.estado) = 'adoptado';
+
+
+
+CREATE OR REPLACE VIEW vista_eventos AS
 SELECT 
-    e.id AS evento_id,
-    e.nombre AS evento,
+    e.nombre AS nombre_evento,
     e.descripcion,
-    e.fecha,
+    TO_CHAR(e.fecha, 'DD/MM/YYYY') AS fecha,
     e.ubicacion,
-    e.tipo,
     u.nombre || ' ' || u.apellido AS responsable,
-    (SELECT COUNT(*) FROM EventosAsistencia ea WHERE ea.evento = e.id) AS cantidad_asistentes,
+    e.tipo,
+    e.estado
+FROM eventos e
+JOIN usuarios u ON e.responsable = u.id;
+
+CREATE OR REPLACE VIEW vista_eventos_virtuales AS
+SELECT 
+    e.nombre AS nombre_evento,
+    e.descripcion,
+    TO_CHAR(e.fecha, 'DD/MM/YYYY') AS fecha,
+    e.ubicacion,
+    u.nombre || ' ' || u.apellido AS responsable,
+    e.tipo,
+    e.estado
+FROM eventos e
+JOIN usuarios u ON e.responsable = u.id
+WHERE LOWER(e.tipo) = 'virtual';
+
+CREATE OR REPLACE VIEW vista_eventos_presenciales AS
+SELECT 
+    e.nombre AS nombre_evento,
+    e.descripcion,
+    TO_CHAR(e.fecha, 'DD/MM/YYYY') AS fecha,
+    e.ubicacion,
+    u.nombre || ' ' || u.apellido AS responsable,
+    e.tipo,
+    e.estado
+FROM eventos e
+JOIN usuarios u ON e.responsable = u.id
+WHERE LOWER(e.tipo) = 'presencial';
+
+
+CREATE OR REPLACE VIEW vista_campanias AS
+SELECT
+    nombre AS "Nombre de la Campaña",
+    fechainicio    AS "Fecha Inicio",
+    fechafin       AS "Fecha Fin",
+    descripcion     AS "Descripción"
+FROM campanias;
+
+CREATE OR REPLACE VIEW vista_campanias_activas AS
+SELECT
+    ID,
+    NOMBRE AS "Nombre de la Campaña",
+    FECHAINICIO AS "Fecha Inicio",
+    FECHAFIN AS "Fecha Fin",
+    DESCRIPCION AS "Descripción",
+    OBJETIVO,
+    USUARIO
+FROM campanias
+WHERE LOWER(ESTADO) = 'activa';
+
+CREATE OR REPLACE VIEW vista_campanias_inactivas AS
+SELECT
+    ID,
+    NOMBRE AS "Nombre de la Campaña",
+    FECHAINICIO AS "Fecha Inicio",
+    FECHAFIN AS "Fecha Fin",
+    DESCRIPCION AS "Descripción",
+    OBJETIVO,
+    USUARIO
+FROM campanias
+WHERE LOWER(ESTADO) = 'inactiva';
+
+
+
+
+CREATE OR REPLACE VIEW vista_inventarios AS
+SELECT
+    nombre        AS "Nombre del Producto",
+    tipo          AS "Tipo",
+    cantidad      AS "Cantidad",
+    fechaingreso  AS "Fecha de Ingreso",
+    fechacaducidad AS "Fecha de Caducidad",
+    proveedor     AS "Proveedor",
+    fuente        AS "Fuente"
+FROM inventario;
+
+CREATE OR REPLACE VIEW vista_inventarios_donacion AS
+SELECT
+    nombre        AS "Nombre del Producto",
+    tipo          AS "Tipo",
+    cantidad      AS "Cantidad",
+    fechaingreso  AS "Fecha de Ingreso",
+    fechacaducidad AS "Fecha de Caducidad",
+    proveedor     AS "Proveedor",
+    fuente        AS "Fuente"
+FROM inventario
+WHERE LOWER(fuente) = 'donacion';
+
+CREATE OR REPLACE VIEW vista_inventarios_compra AS
+SELECT
+    nombre        AS "Nombre del Producto",
+    tipo          AS "Tipo",
+    cantidad      AS "Cantidad",
+    fechaingreso  AS "Fecha de Ingreso",
+    fechacaducidad AS "Fecha de Caducidad",
+    proveedor     AS "Proveedor",
+    fuente        AS "Fuente"
+FROM inventario
+WHERE LOWER(fuente) = 'compra';
+
+CREATE OR REPLACE VIEW vista_inventarios_caducidad AS
+SELECT
+    id,
+    nombre          AS "Nombre del Producto",
+    tipo            AS "Tipo",
+    cantidad        AS "Cantidad",
+    fechaingreso    AS "Fecha de Ingreso",
+    fechacaducidad  AS "Fecha de Caducidad",
+    proveedor       AS "Proveedor",
+    fuente          AS "Fuente",
     CASE 
-        WHEN e.fecha > SYSDATE THEN 'Por realizarse'
-        WHEN e.fecha = TRUNC(SYSDATE) THEN 'Hoy'
-        ELSE 'Realizado'
-    END AS estado_evento
-FROM 
-    Eventos e
-JOIN 
-    Usuarios u ON e.responsable = u.id
-WHERE 
-    e.fecha >= TRUNC(SYSDATE) - 7  -- Hace 7 dias y los futuros
-ORDER BY 
-    e.fecha;
+        WHEN fechacaducidad < TRUNC(SYSDATE) THEN 'Vencido'
+        ELSE 'Vigente'
+    END AS "Estado"
+FROM inventario;
 
--- Adopciones con detalle
-CREATE OR REPLACE VIEW vista_adopciones_detalle AS
-SELECT a.id AS adopcion_id,
-       a.fecha,
-       u.nombre||' '||u.apellido AS adoptante,
-       m.nombre AS mascota,
-       m.raza,
-       m.edad
-  FROM Adopciones a
-  JOIN Usuarios u ON u.id = a.usuario
-  JOIN Mascotas m ON m.id = a.mascota
- ORDER BY a.fecha DESC;
 
--- Mascotas con su última atención médica
-CREATE OR REPLACE VIEW vista_mascotas_ultima_consulta AS
-SELECT m.id AS mascota_id,
-       m.nombre,
-       m.raza,
-       ( SELECT MAX(h.fecha) FROM HistorialMedico h WHERE h.mascota = m.id ) AS ultima_fecha
-  FROM Mascotas m;
 
--- Donaciones por campania (resumen)
-CREATE OR REPLACE VIEW vista_donaciones_por_campania AS
-SELECT c.id AS campania_id,
-       c.nombre,
-       NVL(SUM(d.cantidad),0) AS total_recaudado,
-       COUNT(d.id) AS cant_donaciones
-  FROM campanias c
-  LEFT JOIN Donacionescampanias d ON d.campania = c.id
- GROUP BY c.id, c.nombre;
+CREATE OR REPLACE VIEW vista_voluntarios AS
+SELECT 
+    u.nombre || ' ' || u.apellido AS nombre_completo,
+    TO_CHAR(v.fechainicio, 'DD/MM/YYYY') AS fecha_inicio,
+    TO_CHAR(v.fechafin, 'DD/MM/YYYY') AS fecha_fin,
+    v.horas,
+    v.estado
+FROM voluntarios v
+JOIN usuarios u ON v.usuario = u.id;
 
--- Inventario por vencer (<= 30 días)
-CREATE OR REPLACE VIEW vista_inventario_por_vencer AS
-SELECT i.*
-  FROM Inventario i
- WHERE i.fechaCaducidad IS NOT NULL
-   AND i.fechaCaducidad <= TRUNC(SYSDATE)+30
- ORDER BY i.fechaCaducidad;
 
--- Resumen por usuario (mascotas, reportes, adopciones)
-CREATE OR REPLACE VIEW vista_usuarios_resumen AS
-SELECT u.id,
-       u.nombre||' '||u.apellido AS usuario,
-       (SELECT COUNT(*) FROM Mascotas  m WHERE m.usuario=u.id) AS mascotas_registradas,
-       (SELECT COUNT(*) FROM Reportes  r WHERE r.usuario=u.id) AS reportes,
-       (SELECT COUNT(*) FROM Adopciones a WHERE a.usuario=u.id) AS adopciones
-  FROM Usuarios u;
+CREATE OR REPLACE VIEW VistaUsuarios AS
+SELECT id, nombre || ' ' || apellido AS nombre_completo
+FROM usuarios;
+
+
+CREATE OR REPLACE VIEW vista_usuarios AS
+SELECT 
+    id, 
+    nombre, 
+    apellido, 
+    email, 
+    password, 
+    rol, 
+    telefono
+FROM Usuarios;
+
+CREATE OR REPLACE VIEW vista_usuarios_roles AS
+SELECT 
+    u.id,
+    u.nombre,
+    u.apellido,
+    u.email,
+    u.password,
+    u.telefono,
+    r.nombre AS nombre_rol
+FROM Usuarios u
+JOIN Roles r
+    ON u.rol = r.id;
+    
+
+/*IDEAS 
+Voluntarios
+INVENTARIOS
+
+TRIGGER O ALGO QUE CUANDO UN EVENTO LA FECHA PASE DE AYER, CAMBIE A INACTIVO
+TRIGGER CREAR USUARIO EN BD 
+TRIIGER ASIGNAR ROLES
+

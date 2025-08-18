@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Editar Campañas - Dejando Huella</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+</head>
+
+<body>
+    <header class="header d-flex align-items-center sticky-top">
+        <div class="container-fluid container-xl position-relative d-flex align-items-center justify-content-between">
+            <a href="index.html" class="logo d-flex align-items-center me-auto">
+                <h1 class="sitename">Dejando Huella</h1>
+            </a>
+            <nav class="navmenu">
+                <ul>
+                    <li><a href="index.html">Inicio</a></li>
+                    <li><a href="mascotas.html">Mascotas</a></li>
+                    <li><a href="eventos.html">Eventos</a></li>
+                    <li><a href="campanias.html" class="active">Campañas</a></li>
+                    <li><a href="inventarios.html">Inventarios</a></li>
+                    <li><a href="voluntarios.html">Voluntarios</a></li>
+                </ul>
+            </nav>
+        </div>
+    </header>
+
+    <main class="register-container">
+        <div class="auth-form">
+            <h2>Editar Campaña</h2>
+            <form id="editForm" onsubmit="return false;">
+                <div class="form-group">
+                    <label for="nombre">Nombre</label>
+                    <input type="text" class="form-control" id="nombre" name="nombre" required>
+                </div>
+                <div class="form-group">
+                    <label for="descripcion">Descripción</label>
+                    <input type="text" class="form-control" id="descripcion" name="descripcion" required>
+                </div>
+                <div class="form-group">
+                    <label for="fechaInicio">Fecha de Inicio</label>
+                    <input type="date" class="form-control" id="fechaInicio" name="fechaInicio" required>
+                </div>
+                <div class="form-group">
+                    <label for="fechaFin">Fecha de Fin</label>
+                    <input type="date" class="form-control" id="fechaFin" name="fechaFin" required>
+                </div>
+                <div class="form-group">
+                    <label for="objetivo">Objetivo</label>
+                    <input type="number" class="form-control" id="objetivo" name="objetivo" required>
+                </div>
+                <div class="form-group">
+                    <label for="estado">Estado</label>
+                    <select class="form-control" id="estado" name="estado" required>
+                        <option value="" disabled>Seleccione el estado</option>
+                        <option value="Activa">Activa</option>
+                        <option value="Inactiva">Inactiva</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="usuario">Usuario</label>
+                    <select class="form-control" id="usuario" name="usuario" required>
+                        <option value="" disabled>Seleccione un usuario</option>
+                    </select>
+                </div>
+
+                <button type="button" id="updateButton" class="btn btn-success btn-block">Actualizar Campaña</button>
+            </form>
+
+            <div id="campaniasError" class="error-message mt-2 text-danger"></div>
+            <div id="campaniasSuccess" class="success-message mt-2 text-success"></div>
+        </div>
+    </main>
+
+    <script>
+        // Obtener ID desde URL
+        const params = new URLSearchParams(window.location.search);
+        const id = params.get('id');
+
+        // Cargar usuarios en el select
+        fetch('/api/usuarios')
+            .then(res => res.json())
+            .then(usuarios => {
+                const select = document.querySelector('#usuario');
+                usuarios.forEach(u => {
+                    const option = document.createElement('option');
+                    option.value = u.id;
+                    option.textContent = u.nombre;
+                    select.appendChild(option);
+                });
+            })
+            .catch(err => console.error('Error al cargar usuarios:', err));
+
+        // Cargar datos de la campaña
+        if (id) {
+            fetch(`/api/campanias/${id}`)
+                .then(res => res.json())
+                .then(data => {
+                    // Convertir fechas a formato YYYY-MM-DD
+                    const fechaInicio = new Date(data[3]);
+                    const fechaFin = new Date(data[4]);
+
+                    const formatoFecha = (d) => d.toISOString().split('T')[0]; // 'YYYY-MM-DD'
+
+                    document.querySelector('#nombre').value = data[1];
+                    document.querySelector('#descripcion').value = data[2];
+                    document.querySelector('#fechaInicio').value = formatoFecha(fechaInicio);
+                    document.querySelector('#fechaFin').value = formatoFecha(fechaFin);
+                    document.querySelector('#objetivo').value = data[5];
+                    document.querySelector('#estado').value = data[6];
+                    document.querySelector('#usuario').value = data[7];
+                })
+                .catch(err => console.error('Error al cargar la campaña:', err));
+        }
+
+        // Actualizar campaña
+        document.querySelector('#updateButton').addEventListener('click', () => {
+            const form = document.querySelector('#editForm');
+            const formData = new FormData(form);
+            const data = Object.fromEntries(formData.entries());
+
+            const payload = {
+                nombre: data.nombre,
+                descripcion: data.descripcion,
+                fecha_inicio: data.fechaInicio,
+                fecha_fin: data.fechaFin,
+                estado: data.estado,
+                objetivo: Number(data.objetivo),
+                usuario: Number(data.usuario)
+            };
+
+            fetch(`/api/campanias/${id}`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            })
+                .then(res => res.json())
+                .then(response => {
+                    if (response.success) {
+                        document.querySelector('#campaniasSuccess').textContent = 'Campaña actualizada correctamente';
+                        document.querySelector('#campaniasError').textContent = '';
+                        setTimeout(() => window.location.href = 'campanias.html', 1500);
+                    } else {
+                        document.querySelector('#campaniasError').textContent = response.message || 'Error al actualizar la campaña';
+                        document.querySelector('#campaniasSuccess').textContent = '';
+                    }
+                })
+                .catch(err => {
+                    console.error(err);
+                    document.querySelector('#campaniasError').textContent = 'Error al actualizar la campaña';
+                    document.querySelector('#campaniasSuccess').textContent = '';
+                });
+        });
+    </script>
+
+    <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@4.5.2/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+
+</html>

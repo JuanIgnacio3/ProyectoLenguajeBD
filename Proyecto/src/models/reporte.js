@@ -1,4 +1,4 @@
-const oracledb = require('oracledb');
+const oracledb = require('../config/db');
 const { getConnection, closeConnection, getNextSeqValue } = require('../config/db');
 
 class Reporte {

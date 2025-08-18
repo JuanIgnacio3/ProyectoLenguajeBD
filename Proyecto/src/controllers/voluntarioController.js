@@ -36,24 +36,28 @@ class VoluntarioController {
   async createVoluntario(req, res) {
     try {
       const voluntario = await voluntarioService.createVoluntario(req.body);
-      res.status(201).json(voluntario);
+      res.status(201).json({ success: true, voluntario }); // <-- Aquí
     } catch (error) {
-      res.status(400).json({ error: error.message });
+      res.status(400).json({ success: false, message: error.message }); // <-- Y aquí
     }
   }
 
   async updateVoluntario(req, res) {
     try {
       const voluntario = await voluntarioService.updateVoluntario(req.params.id, req.body);
-      if (voluntario) {
-        res.status(200).json(voluntario);
-      } else {
-        res.status(404).json({ error: 'Voluntario no encontrado' });
+      if (!voluntario) {
+        return res.status(404).json({ success: false, message: 'Voluntario no encontrada o no se modificaron los datos' });
       }
+
+      // Actualización exitosa
+      res.status(200).json({ success: true, voluntario});
+
     } catch (error) {
-      res.status(400).json({ error: error.message });
+      res.status(400).json({ success: false, message: error.message });
     }
   }
+
+
 
   async deleteVoluntario(req, res) {
     try {
@@ -65,6 +69,24 @@ class VoluntarioController {
       }
     } catch (error) {
       res.status(400).json({ error: error.message });
+    }
+  }
+
+   async getHoras(req, res) {
+    try {
+      const horas = await voluntarioService.getHoras(req.params.id);
+      res.status(200).json({ horas });
+    } catch (error) {
+      res.status(500).json({ error: error.message });
+    }
+  }
+
+  async esVoluntario(req, res) {
+    try {
+      const es = await voluntarioService.esVoluntario(req.params.id);
+      res.status(200).json({ es });
+    } catch (error) {
+      res.status(500).json({ error: error.message });
     }
   }
 }

@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Editar Voluntario - Dejando Huella</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+</head>
+
+<body>
+    <header class="header d-flex align-items-center sticky-top">
+        <div class="container-fluid container-xl position-relative d-flex align-items-center justify-content-between">
+            <a href="index.html" class="logo d-flex align-items-center me-auto">
+                <h1 class="sitename">Dejando Huella</h1>
+            </a>
+            <nav class="navmenu">
+                <ul>
+                    <li><a href="index.html">Inicio</a></li>
+                    <li><a href="mascotas.html">Mascotas</a></li>
+                    <li><a href="eventos.html">Eventos</a></li>
+                    <li><a href="campanias.html">Campañas</a></li>
+                    <li><a href="inventarios.html">Inventarios</a></li>
+                    <li><a href="voluntarios.html" class="active">Voluntarios</a></li>
+                </ul>
+            </nav>
+        </div>
+    </header>
+
+    <main class="register-container">
+        <div class="auth-form">
+            <h2>Editar Voluntario</h2>
+            <form id="editForm" onsubmit="return false;">
+                <div class="form-group">
+                    <label for="usuario">Usuario</label>
+                    <select class="form-control" id="usuario" name="usuario" required>
+                        <option value="" disabled>Seleccione un usuario</option>
+                        <!-- JS llenará las opciones -->
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="fechainicio">Fecha de Inicio</label>
+                    <input type="date" class="form-control" id="fechainicio" name="fechainicio" required>
+                </div>
+                <div class="form-group">
+                    <label for="fechafin">Fecha de Fin</label>
+                    <input type="date" class="form-control" id="fechafin" name="fechafin">
+                </div>
+                <div class="form-group">
+                    <label for="horas">Horas</label>
+                    <input type="number" class="form-control" id="horas" name="horas" required>
+                </div>
+                <div class="form-group">
+                    <label for="estado">Estado</label>
+                    <select class="form-control" id="estado" name="estado" required>
+                        <option value="" disabled>Seleccione el estado</option>
+                        <option value="Activo">Activo</option>
+                        <option value="Inactivo">Inactivo</option>
+                    </select>
+                </div>
+                <button type="button" id="updateButton" class="btn btn-success btn-block">Actualizar Voluntario</button>
+            </form>
+            <div id="voluntarioError" class="error-message mt-2 text-danger"></div>
+            <div id="voluntarioSuccess" class="success-message mt-2 text-success"></div>
+        </div>
+    </main>
+
+    <script>
+        // Obtener ID desde URL
+        const params = new URLSearchParams(window.location.search);
+        const id = params.get('id');
+
+        // Cargar usuarios en el select
+        fetch('/api/usuarios')
+            .then(res => res.json())
+            .then(usuarios => {
+                const select = document.querySelector('#usuario');
+                usuarios.forEach(u => {
+                    const option = document.createElement('option');
+                    option.value = u.id;
+                    option.textContent = u.nombre;
+                    select.appendChild(option);
+                });
+            })
+            .catch(err => console.error('Error al cargar usuarios:', err));
+
+        // Cargar datos del voluntario
+        if (id) {
+            fetch(`/api/voluntarios/${id}`)
+                .then(res => res.json())
+                .then(data => {
+                    document.querySelector('#usuario').value = data.usuario;
+                    document.querySelector('#fechainicio').value = data.fecha_inicio ? new Date(data.fecha_inicio).toISOString().split('T')[0] : '';
+                    document.querySelector('#fechafin').value = data.fecha_fin ? new Date(data.fecha_fin).toISOString().split('T')[0] : '';
+                    document.querySelector('#horas').value = data.horas;
+                    document.querySelector('#estado').value = data.estado;
+                })
+                .catch(err => console.error('Error al cargar voluntario:', err));
+        }
+
+        // Actualizar voluntario
+        document.querySelector('#updateButton').addEventListener('click', () => {
+            const form = document.querySelector('#editForm');
+            const formData = new FormData(form);
+            const data = Object.fromEntries(formData.entries());
+
+            const payload = {
+                usuario: Number(data.usuario),
+                fecha_inicio: data.fechainicio,
+                fecha_fin: data.fechafin || null,
+                horas: Number(data.horas),
+                estado: data.estado
+            };
+
+            fetch(`/api/voluntarios/${id}`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            })
+            .then(res => res.json())
+            .then(resData => {
+                if (resData.success) {
+                    document.querySelector('#voluntarioSuccess').textContent = 'Voluntario actualizado correctamente';
+                    document.querySelector('#voluntarioError').textContent = '';
+                    setTimeout(() => window.location.href = 'voluntarios.html', 1500);
+                } else {
+                    document.querySelector('#voluntarioError').textContent = resData.message || 'Error al actualizar voluntario';
+                    document.querySelector('#voluntarioSuccess').textContent = '';
+                }
+            })
+            .catch(err => {
+                console.error(err);
+                document.querySelector('#voluntarioError').textContent = 'Error al actualizar voluntario';
+                document.querySelector('#voluntarioSuccess').textContent = '';
+            });
+        });
+    </script>
+
+    <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@4.5.2/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+
+</html>

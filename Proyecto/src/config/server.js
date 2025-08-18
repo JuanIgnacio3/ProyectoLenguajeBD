@@ -1,163 +1,68 @@
+const path = require('path');
 const express = require('express');
-const bodyParser = require('body-parser');
 const cors = require('cors');
-const { getConnection, closeConnection, getNextSeqValue } = require('./db');
-const Usuario = require('../models/usuario');
-const authRoutes = require('../routes/authRoutes');
-const usuarioRoutes = require('../routes/usuarioRoutes');
-const oracledb = require('oracledb');
-const Mascota = require('../models/mascota');
-const Evento = require('../models/evento');
-const Campania = require('../models/campania');
-const Inventario = require('../models/inventario');
-const Voluntario = require('../models/voluntario');
-
-
+const bodyParser = require('body-parser');
+const session = require('express-session');
+const flash = require('connect-flash'); // Añade esta línea
 
 const app = express();
-const PORT = 3000;
 
-// Middlewares
-app.use(cors());
-app.use(bodyParser.json());
+app.use(express.static(path.join(__dirname, "../frontend")));
 
-// Endpoint para obtener todos los empleados
-app.get('/empleados', async (req, res) => {
-  let connection;
-  try {
-    connection = await getConnection();
-    const result = await connection.execute(
-      `SELECT * FROM USUARIOS`,
-      [],
-      { outFormat: require('oracledb').OUT_FORMAT_OBJECT }
-    );
-    res.json(result.rows);
-  } catch (err) {
-    console.error(err);
-    res.status(500).send('Error al consultar la base de datos');
-  } finally {
-    await closeConnection(connection);
-  }
-});
+// Configuración CORS para desarrollo
+app.use(cors({
+  origin: ['http://localhost:5000', 'http://127.0.0.1:5000'],
+  credentials: true
+}));
 
-// Endpoint para obtener el próximo valor de secuencia
-app.get('/next-id', async (req, res) => {
-  try {
-    const nextId = await getNextSeqValue('seq_usuarios');
-    res.json({ nextId });
-  } catch (err) {
-    res.status(500).send('Error al obtener el siguiente ID');
-  }
-});
-
-// Crear usuario
-app.post('/api/users', async (req, res) => {
-  try {
-    const user = await Usuario.create(req.body);
-    res.status(201).json(user);
-  } catch (err) {
-    res.status(400).json({ error: err.message });
-  }
-});
-
-// Autenticación de usuario
-app.post('/api/users/auth', async (req, res) => {
-  const { email, password } = req.body;
-  let connection;
-
-  try {
-    connection = await getConnection();
-    const result = await connection.execute(
-      `SELECT * FROM usuarios WHERE email = :email AND password = :password`,
-      [email, password],
-      { outFormat: require('oracledb').OUT_FORMAT_OBJECT }
-    );
-
-    if (result.rows.length > 0) {
-      const user = result.rows[0];
-      res.json({
-        ID: user.ID,
-        NOMBRE: user.NOMBRE,
-        APELLIDO: user.APELLIDO,
-        EMAIL: user.EMAIL,
-        ROL: user.ROL
-      });
-    } else {
-      res.status(401).json({ error: 'Credenciales inválidas' });
+// Configuración de sesión
+app.use(session({
+    secret: 'tu_super_secreto_sesion', // Cambia esto en producción
+    resave: false,
+    saveUninitialized: false,
+    cookie: { 
+        secure: process.env.NODE_ENV === 'production', // Solo HTTPS en producción
+        maxAge: 24 * 60 * 60 * 1000 // 1 día
     }
+}));
 
-  } catch (err) {
-    console.error('Error en login:', err);
-    res.status(500).json({ error: 'Error de servidor' });
-  } finally {
-    await closeConnection(connection);
-  }
+// Flash messages (ahora sí está definido)
+app.use(flash());
+
+// Middleware para variables globales
+app.use((req, res, next) => {
+    res.locals.currentUser = req.session.user || null;
+    res.locals.successMessages = req.flash('success');
+    res.locals.errorMessages = req.flash('error');
+    next();
 });
 
-// Rutas externas
-app.use('/api/auth', authRoutes);
-app.use('/api/usuarios', usuarioRoutes);
+// Middlewares para parsing
+app.use(bodyParser.json());
+app.use(bodyParser.urlencoded({ extended: true }));
 
+// Sirve archivos estáticos del frontend
+app.use(express.static(path.join(__dirname, '../frontend')));
 
-// Endpoint para obtener todas las mascotas
-app.get('/api/mascotas', async (req, res) => {
-  try {
-    const mascotas = await Mascota.findAll();
-    res.json(mascotas);
-  } catch (err) {
-    console.error('Error al consultar mascotas:', err);
-    res.status(500).json({ error: 'Error al consultar mascotas' });
-  }
+// Middleware para JSON
+app.use(express.json());
+
+// Ruta para la raíz
+app.get('/', (req, res) => {
+  res.sendFile(path.join(__dirname, '../frontend', 'index.html'));
 });
 
+// Rutas API
+app.use('/api', require('./routes/userRoutes'));
+app.use('/auth', require('./routes/authRoutes'));
+app.use('/auth', require('./routes/voluntarioRoutes'));
+app.use('/auth', require('./routes/reporteRoutes'));
+app.use('/auth', require('./routes/inventarioRoutes'));
 
-// Endpoint para obtener todos los eventos
-app.get('/api/eventos', async (req, res) => {
-  try {
-    const eventos = await Evento.findAll();
-    res.json(eventos); // debe devolver JSON
-  } catch (err) {
-    console.error('Error al consultar eventos:', err);
-    res.status(500).json({ error: 'Error al consultar eventos' });
-  }
-});
+app.use('/api', require('./routes/mascotaRoutes'));
 
-// Endpoint para obtener campanias
-app.get('/api/campanias', async (req, res) => {
-  try {
-    const campanias = await Campania.findAll();
-    res.json(campanias); // debe devolver JSON
-  } catch (err) {
-    console.error('Error al consultar campanias:', err);
-    res.status(500).json({ error: 'Error al consultar campanias' });
-  }
-});
-
-// Endpoint para obtener Inventarios
-app.get('/api/inventarios', async (req, res) => {
-  try {
-    const inventarios = await Inventario.findAll();
-    res.json(inventarios); // debe devolver JSON
-  } catch (err) {
-    console.error('Error al consultar inventarios:', err);
-    res.status(500).json({ error: 'Error al consultar inventarios' });
-  }
-});
-
-// Endpoint para obtener Voluntarios
-app.get('/api/voluntarios', async (req, res) => {
-  try {
-    const voluntarios = await Voluntario.findAll();
-    res.json(voluntarios); // debe devolver JSON
-  } catch (err) {
-    console.error('Error al consultar voluntarios:', err);
-    res.status(500).json({ error: 'Error al consultar voluntarios' });
-  }
-});
-
-// Iniciar servidor
+// Inicia el servidor
+const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => {
-  console.log(`Servidor corriendo en http://localhost:${PORT}`);
+  console.log(`✅ Servidor corriendo en http://localhost:${PORT}`);
 });
-
-

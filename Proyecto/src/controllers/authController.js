@@ -1,7 +1,11 @@
-const authService = require('../services/authService');
-const { validationResult } = require('express-validator');
+const { validationResult } = require("express-validator");
+const Usuario = require("../models/usuario");
+const bcrypt = require('bcrypt');
+
+
 
 class AuthController {
+
     // Mostrar formulario de registro
     showRegistrationForm(req, res) {
         res.render('auth/register', {
@@ -14,7 +18,6 @@ class AuthController {
     // Procesar registro
     async register(req, res) {
         const errors = validationResult(req);
-
         if (!errors.isEmpty()) {
             req.flash('error', errors.array().map(err => err.msg));
             req.flash('formData', req.body);
@@ -22,21 +25,29 @@ class AuthController {
         }
 
         try {
-            const result = await authService.registerUser(req.body);
+            const { nombre, apellido, email, password, telefono, rol } = req.body;
 
-            if (result.success) {
-                req.flash('success', 'Registro exitoso. Por favor inicie sesión.');
-                return res.redirect('/auth/login');
-            } else {
-                req.flash('error', result.message || 'Error en el registro');
-                req.flash('formData', req.body);
-                return res.redirect('/auth/register');
-            }
+            // Hashear la contraseña antes de guardar
+            const hashedPassword = await bcrypt.hash(password, 10);
+
+            // Crear usuario usando el modelo
+            const nuevoUsuario = await Usuario.create({
+                nombre,
+                apellido,
+                email: email.toLowerCase(), // guardar siempre en minúscula
+                password: hashedPassword,
+                telefono,
+                rol
+            });
+
+            req.flash('success', 'Registro exitoso. Por favor inicie sesión.');
+            res.redirect('/auth/login');
+
         } catch (error) {
             console.error('Error en registro:', error);
             req.flash('error', 'Error interno del servidor');
             req.flash('formData', req.body);
-            return res.redirect('/auth/register');
+            res.redirect('/auth/register');
         }
     }
 
@@ -51,36 +62,47 @@ class AuthController {
     // Procesar login
     async login(req, res) {
         const errors = validationResult(req);
-
         if (!errors.isEmpty()) {
-            req.flash('error', errors.array().map(err => err.msg));
-            req.flash('email', req.body.email);
-            return res.redirect('/auth/login');
+            return res.status(400).json({ error: errors.array().map(err => err.msg).join(', ') });
         }
 
         try {
             const { email, password } = req.body;
-            const user = await authService.authenticateUser(email, password);
 
-            if (user) {
-                // Aquí podrías iniciar sesión con req.login si usas Passport
-                req.flash('success', `Bienvenido ${user.nombre}`);
-                return res.redirect('/'); // Redirige a home o dashboard
-            } else {
-                req.flash('error', 'Credenciales inválidas');
-                req.flash('email', email);
-                return res.redirect('/auth/login');
+            // Autenticar usando el modelo Usuario
+            const usuario = await Usuario.authenticateUser(email.toLowerCase(), password);
+
+            if (!usuario) {
+                return res.status(401).json({ error: "Usuario o contraseña incorrectos" });
             }
+
+            // Guardar usuario en sesión
+            req.session.user = {
+                ID: usuario.ID,
+                NOMBRE: usuario.NOMBRE,
+                APELLIDO: usuario.APELLIDO,
+                EMAIL: usuario.EMAIL,
+                ROL: usuario.ROL
+            };
+
+            // Enviar datos al frontend
+            res.json({
+                ID: usuario.ID,
+                NOMBRE: usuario.NOMBRE,
+                APELLIDO: usuario.APELLIDO,
+                EMAIL: usuario.EMAIL,
+                TELEFONO: usuario.TELEFONO,
+                ROL: usuario.ROL
+            });
+
         } catch (error) {
             console.error('Error en login:', error);
-            req.flash('error', 'Error interno del servidor');
-            return res.redirect('/auth/login');
+            res.status(500).json({ error: 'Error interno del servidor' });
         }
     }
 
     // Cerrar sesión
     logout(req, res) {
-        // Si usas sesiones
         if (req.session) {
             req.session.destroy(err => {
                 if (err) console.error(err);
@@ -93,9 +115,7 @@ class AuthController {
 
     // Middleware para verificar autenticación
     ensureAuthenticated(req, res, next) {
-        if (req.user) {
-            return next();
-        }
+        if (req.session && req.session.user) return next();
         req.flash('error', 'Por favor inicie sesión para continuar');
         return res.redirect('/auth/login');
     }
@@ -103,9 +123,7 @@ class AuthController {
     // Middleware para verificar roles
     ensureRole(role) {
         return (req, res, next) => {
-            if (req.user && req.user.rol === role) {
-                return next();
-            }
+            if (req.session && req.session.user && req.session.user.ROL === role) return next();
             req.flash('error', 'No autorizado');
             return res.redirect('/');
         };

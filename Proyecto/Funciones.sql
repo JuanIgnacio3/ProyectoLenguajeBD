@@ -1,4 +1,8 @@
--- 1) Categoriza edad de mascota
+-- =============================
+-- 1️⃣ FUNCIONES MASCOTA
+-- =============================
+
+-- Categoriza edad de mascota
 CREATE OR REPLACE FUNCTION fn_categoria_edad(p_edad NUMBER)
 RETURN VARCHAR2 IS
 BEGIN
@@ -10,7 +14,62 @@ BEGIN
 END;
 /
 
--- 2) Total recaudado de una campania
+-- Estado textual de mascota
+CREATE OR REPLACE FUNCTION fn_mascota_estado_texto(p_mascota_id NUMBER)
+RETURN VARCHAR2 IS v_est VARCHAR2(20);
+BEGIN
+  SELECT estado INTO v_est FROM Mascotas WHERE id=p_mascota_id;
+  RETURN v_est;
+EXCEPTION WHEN NO_DATA_FOUND THEN RETURN 'N/D';
+END;
+/
+
+-- ¿Mascota tiene historial? (1/0)
+CREATE OR REPLACE FUNCTION fn_mascota_tiene_historial(p_mascota_id NUMBER)
+RETURN NUMBER IS v NUMBER;
+BEGIN
+  SELECT COUNT(*) INTO v FROM HistorialMedico WHERE mascota=p_mascota_id;
+  RETURN CASE WHEN v>0 THEN 1 ELSE 0 END;
+END;
+/
+
+-- Total de mascotas de un usuario
+CREATE OR REPLACE FUNCTION fn_total_mascotas_usuario(p_usuario_id NUMBER)
+RETURN NUMBER IS v_cnt NUMBER;
+BEGIN
+  SELECT COUNT(*) INTO v_cnt FROM Mascotas WHERE usuario=p_usuario_id;
+  RETURN v_cnt;
+END;
+/
+
+-- =============================
+-- 2️⃣ FUNCIONES VOLUNTARIO
+-- =============================
+
+-- Horas acumuladas de voluntario
+CREATE OR REPLACE FUNCTION fn_voluntario_horas(p_voluntario_id NUMBER)
+RETURN NUMBER IS v NUMBER;
+BEGIN
+  SELECT horas INTO v FROM Voluntarios WHERE id=p_voluntario_id;
+  RETURN NVL(v,0);
+EXCEPTION WHEN NO_DATA_FOUND THEN RETURN 0;
+END;
+/
+
+-- ¿Usuario es voluntario? (1/0)
+CREATE OR REPLACE FUNCTION fn_es_voluntario(p_usuario_id NUMBER)
+RETURN NUMBER IS v NUMBER;
+BEGIN
+  SELECT COUNT(*) INTO v FROM Voluntarios WHERE usuario=p_usuario_id AND estado='Activo';
+  RETURN CASE WHEN v>0 THEN 1 ELSE 0 END;
+END;
+/
+
+-- =============================
+-- 3️⃣ FUNCIONES CAMPAÑA
+-- =============================
+
+-- Total recaudado de una campaña
 CREATE OR REPLACE FUNCTION fn_campania_recaudado(p_campania_id NUMBER)
 RETURN NUMBER IS v_total NUMBER;
 BEGIN
@@ -21,7 +80,7 @@ BEGIN
 END;
 /
 
--- 3) % de avance de campania
+-- % de avance de campaña
 CREATE OR REPLACE FUNCTION fn_campania_porcentaje(p_campania_id NUMBER)
 RETURN NUMBER IS v_obj NUMBER; v_tot NUMBER;
 BEGIN
@@ -33,7 +92,21 @@ EXCEPTION WHEN NO_DATA_FOUND THEN RETURN 0;
 END;
 /
 
--- 4) Nombre completo de usuario
+-- Días restantes de campaña
+CREATE OR REPLACE FUNCTION fn_dias_restantes_campania(p_campania_id NUMBER)
+RETURN NUMBER IS v_fin DATE;
+BEGIN
+  SELECT fechaFin INTO v_fin FROM campanias WHERE id=p_campania_id;
+  RETURN GREATEST(TRUNC(v_fin)-TRUNC(SYSDATE),0);
+EXCEPTION WHEN NO_DATA_FOUND THEN RETURN 0;
+END;
+/
+
+-- =============================
+-- 4️⃣ FUNCIONES USUARIO
+-- =============================
+
+-- Nombre completo de usuario
 CREATE OR REPLACE FUNCTION fn_usuario_nombre_completo(p_usuario_id NUMBER)
 RETURN VARCHAR2 IS v_nom VARCHAR2(200);
 BEGIN
@@ -43,37 +116,31 @@ EXCEPTION WHEN NO_DATA_FOUND THEN RETURN 'N/D';
 END;
 /
 
--- 5) Total de mascotas de usuario
-CREATE OR REPLACE FUNCTION fn_total_mascotas_usuario(p_usuario_id NUMBER)
-RETURN NUMBER IS v_cnt NUMBER;
+-- Email válido (1/0)
+CREATE OR REPLACE FUNCTION fn_email_valido(p_email VARCHAR2)
+RETURN NUMBER IS
 BEGIN
-  SELECT COUNT(*) INTO v_cnt FROM Mascotas WHERE usuario=p_usuario_id;
-  RETURN v_cnt;
+  IF REGEXP_LIKE(p_email,'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$') THEN
+     RETURN 1;
+  ELSE
+     RETURN 0;
+  END IF;
 END;
 /
 
--- 6) Estado textual de mascota
-CREATE OR REPLACE FUNCTION fn_mascota_estado_texto(p_mascota_id NUMBER)
-RETURN VARCHAR2 IS v_est VARCHAR2(20);
+-- Normalizar teléfono (solo dígitos)
+CREATE OR REPLACE FUNCTION fn_normalizar_telefono(p_tel VARCHAR2)
+RETURN VARCHAR2 IS
 BEGIN
-  SELECT estado INTO v_est FROM Mascotas WHERE id=p_mascota_id;
-  RETURN v_est;
-EXCEPTION WHEN NO_DATA_FOUND THEN RETURN 'N/D';
+  RETURN REGEXP_REPLACE(NVL(p_tel,''),'[^0-9]','');
 END;
 /
 
--- 7) ¿Inventario vencido? (1 sí / 0 no)
-CREATE OR REPLACE FUNCTION fn_inventario_vencido(p_item_id NUMBER)
-RETURN NUMBER IS v_cad DATE;
-BEGIN
-  SELECT fechaCaducidad INTO v_cad FROM Inventario WHERE id=p_item_id;
-  IF v_cad IS NULL THEN RETURN 0; END IF;
-  RETURN CASE WHEN TRUNC(v_cad) < TRUNC(SYSDATE) THEN 1 ELSE 0 END;
-EXCEPTION WHEN NO_DATA_FOUND THEN RETURN 0;
-END;
-/
+-- =============================
+-- 5️⃣ FUNCIONES EVENTO
+-- =============================
 
--- 8) Estado textual de evento (según fecha)
+-- Estado textual de evento (según fecha)
 CREATE OR REPLACE FUNCTION fn_evento_estado_texto(p_evento_id NUMBER)
 RETURN VARCHAR2 IS v_fecha DATE;
 BEGIN
@@ -86,36 +153,7 @@ EXCEPTION WHEN NO_DATA_FOUND THEN RETURN 'N/D';
 END;
 /
 
--- 9) Horas acumuladas de voluntario
-CREATE OR REPLACE FUNCTION fn_voluntario_horas(p_voluntario_id NUMBER)
-RETURN NUMBER IS v NUMBER;
-BEGIN
-  SELECT horas INTO v FROM Voluntarios WHERE id=p_voluntario_id;
-  RETURN NVL(v,0);
-EXCEPTION WHEN NO_DATA_FOUND THEN RETURN 0;
-END;
-/
-
--- 10) Días restantes de campania
-CREATE OR REPLACE FUNCTION fn_dias_restantes_campania(p_campania_id NUMBER)
-RETURN NUMBER IS v_fin DATE;
-BEGIN
-  SELECT fechaFin INTO v_fin FROM campanias WHERE id=p_campania_id;
-  RETURN GREATEST(TRUNC(v_fin)-TRUNC(SYSDATE),0);
-EXCEPTION WHEN NO_DATA_FOUND THEN RETURN 0;
-END;
-/
-
--- 11) ¿Usuario es voluntario? (1/0)
-CREATE OR REPLACE FUNCTION fn_es_voluntario(p_usuario_id NUMBER)
-RETURN NUMBER IS v NUMBER;
-BEGIN
-  SELECT COUNT(*) INTO v FROM Voluntarios WHERE usuario=p_usuario_id AND estado='Activo';
-  RETURN CASE WHEN v>0 THEN 1 ELSE 0 END;
-END;
-/
-
--- 12) Cantidad de asistentes a un evento
+-- Cantidad de asistentes a un evento
 CREATE OR REPLACE FUNCTION fn_evento_asistentes(p_evento_id NUMBER)
 RETURN NUMBER IS v NUMBER;
 BEGIN
@@ -124,31 +162,17 @@ BEGIN
 END;
 /
 
--- 13) ¿Mascota tiene historial? (1/0)
-CREATE OR REPLACE FUNCTION fn_mascota_tiene_historial(p_mascota_id NUMBER)
-RETURN NUMBER IS v NUMBER;
-BEGIN
-  SELECT COUNT(*) INTO v FROM HistorialMedico WHERE mascota=p_mascota_id;
-  RETURN CASE WHEN v>0 THEN 1 ELSE 0 END;
-END;
-/
+-- =============================
+-- 6️⃣ FUNCIONES INVENTARIO
+-- =============================
 
--- 14) Email válido (1/0) usando regexp
-CREATE OR REPLACE FUNCTION fn_email_valido(p_email VARCHAR2)
-RETURN NUMBER IS
+-- ¿Inventario vencido? (1 sí / 0 no)
+CREATE OR REPLACE FUNCTION fn_inventario_vencido(p_item_id NUMBER)
+RETURN NUMBER IS v_cad DATE;
 BEGIN
-  IF REGEXP_LIKE(p_email,'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$') THEN
-     RETURN 1;
-  ELSE
-     RETURN 0;
-  END IF;
-END;
-/
-
--- 15) Normalizar teléfono (solo dígitos)
-CREATE OR REPLACE FUNCTION fn_normalizar_telefono(p_tel VARCHAR2)
-RETURN VARCHAR2 IS
-BEGIN
-  RETURN REGEXP_REPLACE(NVL(p_tel,''),'[^0-9]','');
+  SELECT fechaCaducidad INTO v_cad FROM Inventario WHERE id=p_item_id;
+  IF v_cad IS NULL THEN RETURN 0; END IF;
+  RETURN CASE WHEN TRUNC(v_cad) < TRUNC(SYSDATE) THEN 1 ELSE 0 END;
+EXCEPTION WHEN NO_DATA_FOUND THEN RETURN 0;
 END;
 /

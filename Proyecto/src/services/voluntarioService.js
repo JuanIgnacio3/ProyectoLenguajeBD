@@ -1,4 +1,5 @@
 const Voluntario = require('../models/voluntario');
+const { getConnection, closeConnection } = require('../config/db');
 
 class VoluntarioService {
   // Obtener todos los voluntarios
@@ -29,6 +30,24 @@ class VoluntarioService {
   // Eliminar un voluntario
   async deleteVoluntario(id) {
     return await Voluntario.delete(id);
+  }
+
+  async getHoras(voluntarioId) {
+    try {
+      return await Voluntario.getHoras(voluntarioId);
+    } catch (err) {
+      console.error(`Error en VoluntarioService.getHoras(${voluntarioId}):`, err);
+      throw err;
+    }
+  }
+
+  async esVoluntario(usuarioId) {
+    try {
+      return await Voluntario.esVoluntario(usuarioId);
+    } catch (err) {
+      console.error(`Error en VoluntarioService.esVoluntario(${usuarioId}):`, err);
+      throw err;
+    }
   }
 }
 

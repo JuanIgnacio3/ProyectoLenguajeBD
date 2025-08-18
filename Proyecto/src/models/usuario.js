@@ -1,199 +1,475 @@
-const oracledb = require('oracledb');
-const { getConnection, closeConnection, getNextSeqValue } = require('../config/db');
+/*const oracledb = require('oracledb');
+const bcrypt = require('bcrypt');
+const { getConnection, closeConnection } = require('../config/db');
 
 class Usuario {
+
+  static toNumber(value, nombreCampo) {
+    const num = Number(value);
+    if (isNaN(num)) throw new Error(`El campo ${nombreCampo} debe ser un número`);
+    return num;
+  }
+  
   // CREATE
-  static async create(data) {
+  static async create({ nombre, apellido, email, password, telefono, rol }) {
     let connection;
     try {
-      const seqId = await getNextSeqValue('seq_usuarios');
-      data.id = seqId;
-
       connection = await getConnection();
-      await connection.execute(
-        `INSERT INTO Usuarios (id, nombre, apellido, email, password, telefono, rol) 
-         VALUES (:id, :nombre, :apellido, :email, :password, :telefono, :rol)`,
+
+      // Hashear la contraseña
+      const hashedPassword = await bcrypt.hash(password, 10);
+
+      const result = await connection.execute(
+        `INSERT INTO Usuarios (id, nombre, apellido, email, password, telefono, rol)
+         VALUES (seq_usuarios.NEXTVAL, :nombre, :apellido, :email, :password, :telefono, :rol)
+         RETURNING id INTO :id`,
         {
-          id: data.id,
-          nombre: data.nombre,
-          apellido: data.apellido,
-          email: data.email,
-          password: data.password,
-          telefono: data.telefono,
-          rol: data.rol
+          nombre,
+          apellido,
+          email: email.toLowerCase(),
+          password: hashedPassword,
+          telefono: telefono || null,
+          rol,
+          id: { dir: oracledb.BIND_OUT, type: oracledb.NUMBER }
         },
         { autoCommit: true }
       );
-      return { ...data };
+
+      return { ID: result.outBinds.id[0], nombre, apellido, email, telefono, rol };
+
     } catch (err) {
-      if (err.errorNum === 2290) {
-        // Error de CHECK constraint, podemos intentar identificar campo
-        let campo;
-        if (!/^[A-ZÁÉÍÓÚÑ][a-záéíóúñ\s'-]+$/.test(data.nombre)) campo = 'nombre';
-        else if (!/^[A-ZÁÉÍÓÚÑ][a-záéíóúñ\s'-]+$/.test(data.apellido)) campo = 'apellido';
-        else if (!/^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/.test(data.email)) campo = 'email';
-        else if (data.password.length < 8) campo = 'password';
-        else if (!/^[0-9]{8,10}$/.test(data.telefono)) campo = 'telefono';
-        else if (![1, 2, 3].includes(data.rol)) campo = 'rol';
-        throw new Error(`Error de validación en el campo: ${campo}`);
-      }
+      console.error('Error en Usuario.create:', err);
       throw err;
     } finally {
-      await closeConnection(connection);
+      if (connection) await closeConnection(connection);
     }
   }
-
-
-
-  // READ (all)
-  static async findAll() {
-    let connection;
-    try {
-      connection = await getConnection();
-      const result = await connection.execute(
-        `SELECT u.*, r.nombre as rol_nombre 
-         FROM Usuarios u 
-         JOIN Roles r ON u.rol = r.id`,
-        [],
-        { outFormat: oracledb.OBJECT }
-      );
-      return result.rows;
-    } catch (err) {
-      throw err;
-    } finally {
-      await closeConnection(connection);
-    }
-  }
-
-  // READ (by id)
-  static async findById(id) {
-    let connection;
-    try {
-      connection = await getConnection();
-      const result = await connection.execute(
-        `SELECT u.*, r.nombre as rol_nombre 
-         FROM Usuarios u 
-         JOIN Roles r ON u.rol = r.id 
-         WHERE u.id = :id`,
-        [id],
-        { outFormat: oracledb.OBJECT }
-      );
-      return result.rows[0];
-    } catch (err) {
-      throw err;
-    } finally {
-      await closeConnection(connection);
-    }
-  }
-
-  // READ (by email)
+  // READ by email
   static async findByEmail(email) {
     let connection;
     try {
       connection = await getConnection();
       const result = await connection.execute(
-        `SELECT u.id, u.nombre, u.apellido, u.email, u.password, u.rol 
-         FROM Usuarios u 
-         WHERE u.email = :email`,
-        [email],
+        `SELECT id, nombre, apellido, email, password, rol, telefono 
+                 FROM Usuarios 
+                 WHERE LOWER(email) = :email`,
+        { email: email.toLowerCase() },
         { outFormat: oracledb.OBJECT }
       );
-      return result.rows[0];
+      if (result.rows.length === 0) return null;
+
+      // Normalizar las claves a mayúscula para consistencia con AuthController
+      const row = result.rows[0];
+      return {
+        ID: row.ID,
+        NOMBRE: row.NOMBRE,
+        APELLIDO: row.APELLIDO,
+        EMAIL: row.EMAIL,
+        PASSWORD: row.PASSWORD,
+        TELEFONO: row.TELEFONO,
+        ROL: row.ROL
+      };
     } catch (err) {
+      console.error('Error en Usuario.findByEmail:', err);
       throw err;
     } finally {
-      await closeConnection(connection);
+      if (connection) await closeConnection(connection);
+    }
+  }
+  
+
+  // AUTHENTICATE
+  static async authenticateUser(email, password) {
+    try {
+      const user = await this.findByEmail(email);
+      if (!user || !user.PASSWORD) {
+        console.error('Usuario no encontrado o sin contraseña');
+        return null;
+      }
+
+      const isMatch = await bcrypt.compare(password, user.PASSWORD);
+      return isMatch ? user : null;
+    } catch (err) {
+      console.error('Error en Usuario.authenticateUser:', err);
+      throw err;
     }
   }
 
-  // SEARCH (by name or last name)
-  static async searchByNameOrLast(name) {
+
+  // READ all users
+static async findAll() {
     let connection;
     try {
+        connection = await getConnection();
+        const result = await connection.execute(
+            `SELECT id, nombre FROM Usuarios ORDER BY nombre`,
+            {},
+            { outFormat: oracledb.OBJECT }
+        );
+
+        return result.rows.map(row => ({
+            id: row.ID,
+            nombre: row.NOMBRE
+        }));
+
+    } catch (err) {
+        console.error('Error en Usuario.findAll:', err);
+        throw err;
+    } finally {
+        if (connection) await closeConnection(connection);
+    }
+}
+
+static async findAllRoles() {
+   let connection;
+    try {
       connection = await getConnection();
-      const result = await connection.execute(
-        `SELECT u.*, r.nombre as rol_nombre 
-         FROM Usuarios u 
-         JOIN Roles r ON u.rol = r.id 
-         WHERE LOWER(u.nombre) LIKE '%' || LOWER(:name) || '%' 
-            OR LOWER(u.apellido) LIKE '%' || LOWER(:name) || '%'`,
-        { name },
-        { outFormat: oracledb.OBJECT }
-      );
+      const sql = `SELECT * FROM vista_usuarios_roles`;
+      const result = await connection.execute(sql, [], { outFormat: oracledb.OBJECT });
       return result.rows;
     } catch (err) {
+      console.error('Error en Mascota.findAllRoles():', err);
       throw err;
     } finally {
       await closeConnection(connection);
     }
   }
 
-  // UPDATE
-  static async update(id, data) {
+   static async getNombreCompleto(id) {
+    let connection;
+    try {
+      const idNum = this.toNumber(id, "id");
+      connection = await getConnection();
+      const result = await connection.execute(
+        `SELECT fn_usuario_nombre_completo(:id) AS nombre FROM dual`,
+        { id: idNum },
+        { outFormat: oracledb.OUT_FORMAT_OBJECT }
+      );
+      return result.rows[0].NOMBRE;
+    } catch (err) {
+      console.error(`Error en Usuario.getNombreCompleto(${id}):`, err);
+      throw err;
+    } finally {
+      if (connection) await closeConnection(connection);
+    }
+  }
+
+  static async emailValido(email) {
     let connection;
     try {
       connection = await getConnection();
       const result = await connection.execute(
-        `UPDATE Usuarios 
-         SET nombre = :nombre, apellido = :apellido, email = :email, 
-             password = :password, telefono = :telefono, rol = :rol 
-         WHERE id = :id`,
+        `SELECT fn_email_valido(:email) AS valido FROM dual`,
+        { email },
+        { outFormat: oracledb.OUT_FORMAT_OBJECT }
+      );
+      return result.rows[0].VALIDO;
+    } catch (err) {
+      console.error(`Error en Usuario.emailValido(${email}):`, err);
+      throw err;
+    } finally {
+      if (connection) await closeConnection(connection);
+    }
+  }
+
+  static async normalizarTelefono(tel) {
+    let connection;
+    try {
+      connection = await getConnection();
+      const result = await connection.execute(
+        `SELECT fn_normalizar_telefono(:tel) AS telefono FROM dual`,
+        { tel },
+        { outFormat: oracledb.OUT_FORMAT_OBJECT }
+      );
+      return result.rows[0].TELEFONO;
+    } catch (err) {
+      console.error(`Error en Usuario.normalizarTelefono(${tel}):`, err);
+      throw err;
+    } finally {
+      if (connection) await closeConnection(connection);
+    }
+  }
+  
+}
+module.exports = Usuario;*/
+
+const oracledb = require('oracledb');
+const bcrypt = require('bcrypt');
+const { getConnection, closeConnection } = require('../config/db');
+
+class Usuario {
+
+  static toNumber(value, nombreCampo) {
+    const num = Number(value);
+    if (isNaN(num)) throw new Error(`El campo ${nombreCampo} debe ser un número`);
+    return num;
+  }
+
+  // CREATE usando paquete
+  static async create({ nombre, apellido, email, password, telefono, rol }) {
+    let connection;
+    try {
+      connection = await getConnection();
+      const hashedPassword = await bcrypt.hash(password, 10);
+
+      const result = await connection.execute(
+        `BEGIN
+           pkg_usuario.sp_create_usuario(
+             :nombre, :apellido, :email, :password, :rol, :telefono, :id
+           );
+         END;`,
         {
-          id,
-          nombre: data.nombre,
-          apellido: data.apellido,
-          email: data.email,
-          password: data.password,
-          telefono: data.telefono,
-          rol: data.rol
+          nombre,
+          apellido,
+          email: email.toLowerCase(),
+          password: hashedPassword,
+          rol,
+          telefono: telefono || null,
+          id: { dir: oracledb.BIND_OUT, type: oracledb.NUMBER }
         },
         { autoCommit: true }
       );
-      return result.rowsAffected > 0 ? { id, ...data } : null;
+
+      return {
+        id: result.outBinds.id,
+        nombre,
+        apellido,
+        email: email.toLowerCase(),
+        telefono,
+        rol
+      };
+
     } catch (err) {
+      console.error('Error en Usuario.create:', err);
       throw err;
     } finally {
-      await closeConnection(connection);
+      if (connection) await closeConnection(connection);
     }
   }
 
-  // DELETE
+  // READ by email usando paquete
+  static async findByEmail(email) {
+    let connection;
+    let cursor;
+    try {
+      connection = await getConnection();
+
+      const result = await connection.execute(
+        `BEGIN
+           pkg_usuario.sp_get_usuario_by_email(:email, :cursor);
+         END;`,
+        {
+          email: email.toLowerCase(),
+          cursor: { dir: oracledb.BIND_OUT, type: oracledb.CURSOR }
+        }
+      );
+
+      cursor = result.outBinds.cursor;
+      const rows = await cursor.getRows(1); // solo un usuario
+      await cursor.close();
+
+      if (!rows || rows.length === 0) return null;
+
+      const row = rows[0];
+      return {
+        id: row.ID,
+        nombre: row.NOMBRE,
+        apellido: row.APELLIDO,
+        email: row.EMAIL,
+        password: row.PASSWORD,
+        telefono: row.TELEFONO,
+        rol: row.NOMBRE_ROL
+      };
+
+    } catch (err) {
+      console.error('Error en Usuario.findByEmail:', err);
+      throw err;
+    } finally {
+      if (connection) await closeConnection(connection);
+    }
+  }
+
+  // READ all users usando paquete
+static async findAll() {
+  let connection;
+  let cursor;
+  try {
+    connection = await getConnection();
+
+    const result = await connection.execute(
+      `BEGIN pkg_usuario.sp_get_all_usuarios(:cursor); END;`,
+      { cursor: { dir: oracledb.BIND_OUT, type: oracledb.CURSOR } }
+    );
+
+    cursor = result.outBinds.cursor;
+
+    // Obtener todas las filas como arrays
+    const rows = await cursor.getRows(1000); // máximo 1000 filas
+    const columnNames = cursor.metaData.map(col => col.name); // extraer nombres de columnas
+    await cursor.close();
+
+    // Convertir arrays a objetos JSON
+    return rows.map(row => {
+      const obj = {};
+      row.forEach((val, idx) => {
+        obj[columnNames[idx]] = val;
+      });
+      return obj;
+    });
+
+  } catch (err) {
+    console.error("Error en Usuario.findAll():", err);
+    throw err;
+  } finally {
+    if (connection) await closeConnection(connection);
+  }
+}
+
+
+
+  // UPDATE usando paquete
+  static async update({ id, nombre, apellido, email, password, telefono, rol }) {
+    let connection;
+    try {
+      connection = await getConnection();
+      const hashedPassword = password ? await bcrypt.hash(password, 10) : null;
+
+      await connection.execute(
+        `BEGIN
+           pkg_usuario.sp_update_usuario(
+             :id, :nombre, :apellido, :email, :password, :rol, :telefono
+           );
+         END;`,
+        {
+          id,
+          nombre,
+          apellido,
+          email: email?.toLowerCase(),
+          password: hashedPassword,
+          rol,
+          telefono: telefono || null
+        },
+        { autoCommit: true }
+      );
+
+    } catch (err) {
+      console.error('Error en Usuario.update:', err);
+      throw err;
+    } finally {
+      if (connection) await closeConnection(connection);
+    }
+  }
+
+  // DELETE usando paquete
   static async delete(id) {
     let connection;
     try {
       connection = await getConnection();
-      const result = await connection.execute(
-        `DELETE FROM Usuarios WHERE id = :id`,
-        [id],
+
+      await connection.execute(
+        `BEGIN
+           pkg_usuario.sp_delete_usuario(:id);
+         END;`,
+        { id },
         { autoCommit: true }
       );
-      return result.rowsAffected > 0;
+
     } catch (err) {
+      console.error('Error en Usuario.delete:', err);
       throw err;
     } finally {
-      await closeConnection(connection);
+      if (connection) await closeConnection(connection);
     }
   }
 
-  // AUTHENTICATE (manual auth, not used in API login)
-  static async authenticate(email, password) {
+  // AUTHENTICATE
+  static async authenticateUser(email, password) {
+    try {
+      const user = await this.findByEmail(email);
+      if (!user || !user.password) return null;
+
+      const isMatch = await bcrypt.compare(password, user.password);
+      return isMatch ? user : null;
+    } catch (err) {
+      console.error('Error en Usuario.authenticateUser:', err);
+      throw err;
+    }
+  }
+
+  // Listar roles desde vista
+  static async findAllRoles() {
+    let connection;
+    try {
+      connection = await getConnection();
+      const sql = `SELECT * FROM vista_usuarios_roles`;
+      const result = await connection.execute(sql, [], { outFormat: oracledb.OBJECT });
+      return result.rows;
+    } catch (err) {
+      console.error('Error en Usuario.findAllRoles():', err);
+      throw err;
+    } finally {
+      if (connection) await closeConnection(connection);
+    }
+  }
+
+  // Obtener nombre completo
+  static async getNombreCompleto(id) {
+    let connection;
+    try {
+      const idNum = this.toNumber(id, "id");
+      connection = await getConnection();
+      const result = await connection.execute(
+        `SELECT fn_usuario_nombre_completo(:id) AS nombre FROM dual`,
+        { id: idNum },
+        { outFormat: oracledb.OUT_FORMAT_OBJECT }
+      );
+      return result.rows[0]?.NOMBRE || null;
+    } catch (err) {
+      console.error(`Error en Usuario.getNombreCompleto(${id}):`, err);
+      throw err;
+    } finally {
+      if (connection) await closeConnection(connection);
+    }
+  }
+
+  // Validar email
+  static async emailValido(email) {
     let connection;
     try {
       connection = await getConnection();
       const result = await connection.execute(
-        `SELECT u.id, u.nombre, u.apellido, u.email, u.password, u.rol 
-         FROM Usuarios u 
-         WHERE u.email = :email AND u.password = :password`,
-        { email, password },
-        { outFormat: oracledb.OBJECT }
+        `SELECT fn_email_valido(:email) AS valido FROM dual`,
+        { email },
+        { outFormat: oracledb.OUT_FORMAT_OBJECT }
       );
-      return result.rows[0];
+      return result.rows[0]?.VALIDO || false;
     } catch (err) {
+      console.error(`Error en Usuario.emailValido(${email}):`, err);
       throw err;
     } finally {
-      await closeConnection(connection);
+      if (connection) await closeConnection(connection);
     }
   }
+
+  // Normalizar teléfono
+  static async normalizarTelefono(tel) {
+    let connection;
+    try {
+      connection = await getConnection();
+      const result = await connection.execute(
+        `SELECT fn_normalizar_telefono(:tel) AS telefono FROM dual`,
+        { tel },
+        { outFormat: oracledb.OUT_FORMAT_OBJECT }
+      );
+      return result.rows[0]?.TELEFONO || null;
+    } catch (err) {
+      console.error(`Error en Usuario.normalizarTelefono(${tel}):`, err);
+      throw err;
+    } finally {
+      if (connection) await closeConnection(connection);
+    }
+  }
+
 }
 
 module.exports = Usuario;

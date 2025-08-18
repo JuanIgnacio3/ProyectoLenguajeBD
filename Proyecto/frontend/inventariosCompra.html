@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Inventarios - Dejando Huella</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+</head>
+
+<body>
+    <header class="header d-flex align-items-center sticky-top">
+        <div class="container-fluid container-xl position-relative d-flex align-items-center justify-content-between">
+            <a href="index.html" class="logo d-flex align-items-center me-auto">
+                <h1 class="sitename">Dejando Huella</h1>
+            </a>
+            <nav class="navmenu">
+                <ul>
+                    <li><a href="index.html">Inicio</a></li>
+                    <li><a href="mascotas.html">Mascotas</a></li>
+                    <li><a href="eventos.html">Eventos</a></li>
+                    <li><a href="campanias.html">Campañas</a></li>
+                    <li><a href="inventarios.html" class="active">Inventarios</a></li>
+                    <li><a href="voluntarios.html">Voluntarios</a></li>
+                    <li><a class="btn btn-primary btn-sm text-white" href="register.html">Registro</a></li>
+                    <li><a class="btn btn-success btn-sm text-white" href="login.html">Login</a></li>
+                </ul>
+            </nav>
+        </div>
+    </header>
+
+    <main class="container py-5">
+        <h2 class="text-center mb-4">Inventarios por Compra</h2>
+
+        <div class="mb-4 text-right">
+            <a href="crearInventarios.html" class="btn btn-success">
+                <i class="fas fa-boxes"></i> Registrar Inventario
+            </a>
+        </div>
+
+        <div class="table-responsive">
+            <table class="table table-bordered table-striped">
+                <thead class="thead-dark">
+                    <tr>
+                        <th>ID</th>
+                        <th>Nombre del Inventario</th>
+                        <th>Tipo</th>
+                        <th>Cantidad</th>
+                        <th>Fecha Ingreso</th>
+                        <th>Fecha Caducidad</th>
+                        <th>Proveedor</th>
+                        <th>Fuente</th>
+                    </tr>
+                </thead>
+                <tbody id="inventariosTable"></tbody>
+            </table>
+        </div>
+    </main>
+
+    <script>
+        // ===============================
+        // Cargar inventarios desde la API
+        // ===============================
+        fetch('/api/inventarios/compra') 
+            .then(response => response.json())
+            .then(data => {
+                const tbody = document.querySelector('#inventariosTable');
+                if (!tbody) {
+                    console.error('No se encontró la tabla con id="inventariosTable"');
+                    return;
+                }
+
+                // Recorrer cada inventario y crear filas dinámicas
+                data.forEach(inv => {
+                    const id = inv[0]; // ID real del inventario (número o letra)
+                    const nombre = inv[1];
+                    const tipo = inv[2];
+                    const cantidad = inv[3];
+                    const fechaIngreso = inv[4] ? new Date(inv[4]).toLocaleDateString() : '';
+                    const fechaCaducidad = inv[5] ? new Date(inv[5]).toLocaleDateString() : '';
+                    const proveedor = inv[6];
+                    const fuente = inv[7];
+
+                    const row = document.createElement('tr');
+                    row.innerHTML = `
+                    <td>${id}</td>
+                    <td>${nombre}</td>
+                    <td>${tipo}</td>
+                    <td>${cantidad}</td>
+                    <td>${fechaIngreso}</td>
+                    <td>${fechaCaducidad}</td>
+                    <td>${proveedor}</td>
+                    <td>${fuente}</td>
+                    
+                `;
+                    tbody.appendChild(row);
+                });
+            })
+            .catch(err => console.error('Error al cargar inventarios:', err));
+
+     
+    </script>
+
+
+
+    <footer class="text-center py-3 bg-light">
+        <p>&copy; 2025 Dejando Huella. Todos los derechos reservados.</p>
+    </footer>
+
+    <script src="js/utils.js"></script>
+</body>
+
+</html>

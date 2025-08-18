@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Inventarios - Dejando Huella</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+</head>
+
+<body>
+    <header class="header d-flex align-items-center sticky-top">
+        <div class="container-fluid container-xl position-relative d-flex align-items-center justify-content-between">
+            <a href="index.html" class="logo d-flex align-items-center me-auto">
+                <h1 class="sitename">Dejando Huella</h1>
+            </a>
+            <nav class="navmenu">
+                <ul>
+                    <li><a href="index.html">Inicio</a></li>
+                    <li><a href="mascotas.html">Mascotas</a></li>
+                    <li><a href="eventos.html">Eventos</a></li>
+                    <li><a href="campanias.html">Campañas</a></li>
+                    <li><a href="inventarios.html" class="active">Inventarios</a></li>
+                    <li><a href="voluntarios.html">Voluntarios</a></li>
+                    <li><a class="btn btn-primary btn-sm text-white" href="register.html">Registro</a></li>
+                    <li><a class="btn btn-success btn-sm text-white" href="login.html">Login</a></li>
+                </ul>
+            </nav>
+        </div>
+    </header>
+
+    <main class="container py-5">
+        <h2 class="text-center mb-4">Usuarios</h2>
+
+        
+<div class="table-responsive">
+    <table class="table table-bordered table-striped">
+        <thead class="thead-dark">
+            <tr>
+                <th>ID</th>
+                <th>Nombre</th>
+                <th>Apellido</th>
+                <th>Email</th>
+                <th>Teléfono</th>
+                <th>Nombre Rol</th>
+                <th>Acciones</th>
+            </tr>
+        </thead>
+        <tbody id="usuariosTable"></tbody>
+    </table>
+</div>
+
+
+<script>
+async function cargarUsuarios() {
+    try {
+        const res = await fetch('/api/usuarios');
+        const data = await res.json();
+
+        console.log('Usuarios API:', data); // Revisa los nombres de campos aquí
+        const tbody = document.querySelector('#usuariosTable');
+        tbody.innerHTML = '';
+
+        data.forEach(us => {
+            const keys = Object.keys(us);
+
+            // Asignación flexible de campos
+            const id = us[keys[0]] ?? 'N/D';
+            const nombre = us[keys[1]] ?? 'N/D';
+            const apellido = us[keys[2]] ?? 'N/D';
+            const email = us[keys[3]] ?? 'N/D';
+            const telefono = us[keys[4]] ?? 'N/D';
+            const nombreRol = us[keys[5]] ?? 'N/D';
+
+            const row = document.createElement('tr');
+
+            if ((nombreRol || '').toLowerCase() === 'administrador') {
+                row.style.backgroundColor = '#d4edda';
+                row.style.color = '#155724';
+            }
+
+            row.innerHTML = `
+                <td>${id}</td>
+                <td>${nombre}</td>
+                <td>${apellido}</td>
+                <td>${email}</td>
+                <td>${telefono}</td>
+                <td>${nombreRol}</td>
+                <td>
+                    <button class="btn btn-info btn-sm nombre-btn" data-id="${id}">Nombre Completo</button>
+                    <button class="btn btn-warning btn-sm validar-btn" data-email="${email}">Validar Email</button>
+                    <button class="btn btn-secondary btn-sm telefono-btn" data-tel="${telefono}">Normalizar Teléfono</button>
+                    
+                    <button class="btn btn-danger btn-sm eliminar-btn" data-id="${id}">Eliminar</button>
+                </td>
+            `;
+            tbody.appendChild(row);
+        });
+    } catch (err) {
+        console.error('Error al cargar usuarios:', err);
+    }
+}
+
+// Delegación de eventos
+document.addEventListener('DOMContentLoaded', () => {
+    cargarUsuarios();
+
+    document.querySelector('#usuariosTable').addEventListener('click', (e) => {
+
+        const button = e.target.closest('button');
+        if (!button) return;
+
+        const id = button.dataset.id;
+        const email = button.dataset.email;
+        const tel = button.dataset.tel;
+
+        // Nombre completo
+        if (button.classList.contains('nombre-btn')) {
+            fetch(`/api/usuarios/${id}/nombre`)
+                .then(res => res.json())
+                .then(data => {
+                    const nombre = data.nombre || data.NOMBRE || 'No disponible';
+                    const apellido = data.apellido || data.APELLIDO || 'No disponible';
+                    alert(`Nombre completo del usuario ${id}: ${nombre} ${apellido}`);
+                })
+                .catch(err => console.error('Error al obtener nombre completo:', err));
+        }
+
+        // Validar email
+        if (button.classList.contains('validar-btn')) {
+            fetch(`/api/usuarios/${email}/email-valido`)
+                .then(res => res.json())
+                .then(data => {
+                    alert(`Email "${email}" es ${data.valido ? 'válido' : 'inválido'}`);
+                })
+                .catch(err => console.error('Error al validar email:', err));
+        }
+
+        // Normalizar teléfono
+        if (button.classList.contains('telefono-btn')) {
+            fetch(`/api/usuarios/${tel}/normalizar-telefono`)
+                .then(res => res.json())
+                .then(data => {
+                    alert(`Teléfono normalizado: ${data.telefono || 'No disponible'}`);
+                })
+                .catch(err => console.error('Error al normalizar teléfono:', err));
+        }
+
+        // Editar usuario
+        if (button.classList.contains('editar-btn')) {
+            window.location.href = `/editarUsuario.html?id=${id}`;
+        }
+
+         // Botón eliminar
+        if (button.classList.contains('eliminar-btn')) {
+            if (confirm('¿Seguro que deseas eliminar este usuario?')) {
+                fetch(`/api/usuarios/${id}`, { method: 'DELETE' })
+                    .then(res => {
+                        if (res.ok) location.reload();
+                        else alert('No se pudo eliminar el usuario');
+                    })
+                    .catch(err => console.error('Error al eliminar usuario:', err));
+            }
+        }
+
+    });
+});
+</script>
+
+
+
+
+
+
+
+    <footer class="text-center py-3 bg-light">
+        <p>&copy; 2025 Dejando Huella. Todos los derechos reservados.</p>
+    </footer>
+
+    <script src="js/utils.js"></script>
+</body>
+
+</html>

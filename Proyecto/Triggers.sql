@@ -1,36 +1,45 @@
---Trigger 1: Actualizar fecha de modificación en tabla Mascotas al actualizar
-
+-- 1. Actualizar fecha de modificación en Mascotas
 CREATE OR REPLACE TRIGGER trg_mascotas_update
 BEFORE UPDATE ON Mascotas
 FOR EACH ROW
 BEGIN
-  :NEW.fecha_modificacion := SYSDATE;
+  :NEW.FECHA_MODIFICACION := SYSDATE;
 END;
 /
 
---Trigger 2: Evitar cambiar el estado de una mascota adoptada a disponible
-
+-- 2. Evitar cambiar estado de Adoptado a Disponible
 CREATE OR REPLACE TRIGGER trg_mascota_estado
 BEFORE UPDATE OF estado ON Mascotas
 FOR EACH ROW
 BEGIN
-  IF :OLD.estado = 'Adoptada' AND :NEW.estado = 'Disponible' THEN
-    RAISE_APPLICATION_ERROR(-20001, 'No se puede cambiar estado de Adoptada a Disponible');
+  IF :OLD.ESTADO = 'Adoptado' AND :NEW.ESTADO = 'Disponible' THEN
+    RAISE_APPLICATION_ERROR(-20001, 'No se puede cambiar el estado de Adoptado a Disponible');
   END IF;
 END;
 /
 
---Trigger 3: Registrar inserciones en tabla Donacionescampanias en tabla LogDonaciones
+-- 3. Evitar que un voluntario activo sea eliminado
+CREATE OR REPLACE TRIGGER trg_no_borrar_voluntarios_activos
+BEFORE DELETE ON Voluntarios
+FOR EACH ROW
+BEGIN
+  IF :OLD.ESTADO = 'Activo' THEN
+    RAISE_APPLICATION_ERROR(-20002, 'No se puede eliminar un voluntario activo');
+  END IF;
+END;
+/
+
+-- 4. Registrar donaciones en log de campañas
 CREATE OR REPLACE TRIGGER trg_log_donaciones_insert
 AFTER INSERT ON Donacionescampanias
 FOR EACH ROW
 BEGIN
-  INSERT INTO LogDonaciones (donacion_id, campania_id, cantidad, fecha)
-  VALUES (:NEW.id, :NEW.campania, :NEW.cantidad, SYSDATE);
+  INSERT INTO Reportes(fecha, usuario, detalles, provincia, canton, distrito, mascota)
+  VALUES (:NEW.fecha, :NEW.usuario, 'Donación de ' || :NEW.cantidad || ' a campaña ' || :NEW.campania, 'N/A','N/A','N/A', NULL);
 END;
 /
 
---Trigger 4: Actualizar estado de campania a 'Completada' cuando se alcance el objetivo
+-- 5. Actualizar estado de campaña cuando se cumpla objetivo
 CREATE OR REPLACE TRIGGER trg_actualiza_estado_campania
 AFTER INSERT OR UPDATE ON Donacionescampanias
 FOR EACH ROW
@@ -38,74 +47,54 @@ DECLARE
   v_total NUMBER;
   v_objetivo NUMBER;
 BEGIN
-  SELECT SUM(cantidad) INTO v_total FROM Donacionescampanias WHERE campania = :NEW.campania;
-  SELECT objetivo INTO v_objetivo FROM campanias WHERE id = :NEW.campania;
+  SELECT NVL(SUM(CANTIDAD),0) INTO v_total
+  FROM Donacionescampanias
+  WHERE CAMPANIA = :NEW.campania;
+
+  SELECT OBJETIVO INTO v_objetivo
+  FROM campanias
+  WHERE ID = :NEW.campania;
 
   IF v_total >= v_objetivo THEN
-    UPDATE campanias SET estado = 'Completada' WHERE id = :NEW.campania;
+    UPDATE campanias
+    SET ESTADO = 'Inactiva'
+    WHERE ID = :NEW.campania;
   END IF;
 END;
 /
 
---Trigger 5: No permitir borrar voluntarios activos
-CREATE OR REPLACE TRIGGER trg_no_borrar_voluntarios_activos
-BEFORE DELETE ON Voluntarios
+-- 6. Evitar que una mascota sea adoptada más de una vez
+CREATE OR REPLACE TRIGGER trg_una_adopcion
+BEFORE INSERT ON Adopciones
 FOR EACH ROW
+DECLARE
+  v_count NUMBER;
 BEGIN
-  IF :OLD.estado = 'Activo' THEN
-    RAISE_APPLICATION_ERROR(-20002, 'No se puede eliminar un voluntario activo');
+  SELECT COUNT(*) INTO v_count
+  FROM Adopciones
+  WHERE MASCOTA = :NEW.mascota;
+
+  IF v_count > 0 THEN
+    RAISE_APPLICATION_ERROR(-20003, 'Esta mascota ya ha sido adoptada');
   END IF;
 END;
 /
---Trigger 6: Asignar perfil a usuarios nuevos segun el rol
-CREATE OR REPLACE TRIGGER trg_asignar_perfil
-AFTER INSERT ON Usuarios
-FOR EACH ROW
-DECLARE
-    v_perfil VARCHAR2(30);
-BEGIN
-    IF :NEW.rol = 1 THEN
-        v_perfil := 'perfil_admin_Proyecto';
-    ELSIF :NEW.rol = 2 THEN
-        v_perfil := 'perfil_usuario_Proyecto';
-    ELSIF :NEW.rol = 3 THEN
-        v_perfil := 'perfil_voluntario_Proyecto';
-    ELSE
-        v_perfil := NULL; 
-    END IF;
 
-    IF v_perfil IS NOT NULL THEN
-        EXECUTE IMMEDIATE 'ALTER USER ' || :NEW.nombre || ' PROFILE ' || v_perfil;
-    END IF;
+-- 7. Marcar historial médico como inactivo cuando la mascota es eliminada
+CREATE OR REPLACE TRIGGER trg_inactivar_historial_mascota
+AFTER DELETE ON Mascotas
+FOR EACH ROW
+BEGIN
+  UPDATE HistorialMedico
+  SET ESTADO = 'Inactivo'
+  WHERE MASCOTA = :OLD.id;
 END;
 /
 
---Trigger 7: Crear usuario
-CREATE OR REPLACE TRIGGER trg_crear_usuario_oracle
-AFTER INSERT ON Usuarios
+CREATE OR REPLACE TRIGGER trg_mascotas_update
+BEFORE UPDATE ON Mascotas
 FOR EACH ROW
-DECLARE
-    v_profile VARCHAR2(50);
-    v_sql     VARCHAR2(1000);
 BEGIN
-    -- Asignar perfil según el rol
-    IF :NEW.rol = 1 THEN
-        v_profile := 'perfil_admin_Proyecto';
-    ELSIF :NEW.rol = 2 THEN
-        v_profile := 'perfil_usuario_Proyecto';
-    ELSIF :NEW.rol = 3 THEN
-        v_profile := 'perfil_voluntario_Proyecto';
-    ELSE
-        v_profile := 'perfil_usuario_Proyecto'; -- Default
-    END IF;
-
-    v_sql := 'CREATE USER ' || :NEW.nombre || ' IDENTIFIED BY "TempPass123"';
-    EXECUTE IMMEDIATE v_sql;
-
-    v_sql := 'GRANT CONNECT TO ' || :NEW.nombre;
-    EXECUTE IMMEDIATE v_sql;
-
-    v_sql := 'ALTER USER ' || :NEW.nombre || ' PROFILE ' || v_profile;
-    EXECUTE IMMEDIATE v_sql;
+  :NEW.FECHA_MODIFICACION := SYSDATE;
 END;
 /

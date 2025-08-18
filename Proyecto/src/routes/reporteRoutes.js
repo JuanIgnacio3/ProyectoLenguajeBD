@@ -1,6 +1,6 @@
 const express = require('express');
 const router = express.Router();
-const reportesController = require('../controllers/reporteController');
+const reporteController = require('../controllers/reporteController');
 
 // Obtener todos los reportes
 router.get('/', reporteController.getAllReportes);
@@ -9,7 +9,7 @@ router.get('/', reporteController.getAllReportes);
 router.get('/:id', reporteController.getReporteById);
 
 // Buscar reportes por nombre (POST)
-router.post('/search', reporteController.searchReporteByNombre);
+router.post('/search', reporteController.searchReporteByTipo);
 
 // Crear un nuevo reporte
 router.post('/', reporteController.createReporte);

@@ -1,6 +1,5 @@
 const reporteService = require('../services/reporteService');
 
-
 class ReporteController {
   async getAllReportes(req, res) {
     try {

@@ -12,7 +12,7 @@ async function makeRequest(url, method = 'GET', data = null) {
     }
 
     try {
-        const response = await fetch(`http://localhost:3000/api${url}`, options);
+        const response = await fetch(`http://localhost:5000/api${url}`, options);
         if (!response.ok) {
             const errorData = await response.json();
             throw new Error(errorData.message || 'Error en la API');

@@ -1,60 +1,80 @@
 const path = require('path');
 const express = require('express');
 const cors = require('cors');
-const bodyParser = require('body-parser');
 const session = require('express-session');
-const flash = require('connect-flash'); // Añade esta línea
+const flash = require('connect-flash');
 
 const app = express();
 
-// Configuración CORS para desarrollo
+// -----------------------------------
+// Middlewares
+// -----------------------------------
+
+
+
+// CORS (para desarrollo)
 app.use(cors({
-  origin: ['http://localhost:5500', 'http://127.0.0.1:5500'],
+  origin: ['http://localhost:5000', 'http://127.0.0.1:5000'],
   credentials: true
 }));
 
+// Parseo de JSON y formularios
+app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
+
 // Configuración de sesión
 app.use(session({
-    secret: 'tu_super_secreto_sesion', // Cambia esto en producción
-    resave: false,
-    saveUninitialized: false,
-    cookie: { 
-        secure: process.env.NODE_ENV === 'production', // Solo HTTPS en producción
-        maxAge: 24 * 60 * 60 * 1000 // 1 día
-    }
+  secret: 'tu_super_secreto_sesion', // Cambiar en producción
+  resave: false,
+  saveUninitialized: false,
+  cookie: { 
+    secure: process.env.NODE_ENV === 'production', 
+    maxAge: 24 * 60 * 60 * 1000 // 1 día
+  }
 }));
 
-// Flash messages (ahora sí está definido)
+// Flash messages
 app.use(flash());
 
-// Middleware para variables globales
+// Variables globales para templates y mensajes
 app.use((req, res, next) => {
-    res.locals.currentUser = req.session.user || null;
-    res.locals.successMessages = req.flash('success');
-    res.locals.errorMessages = req.flash('error');
-    next();
+  res.locals.currentUser = req.session.user || null;
+  res.locals.successMessages = req.flash('success');
+  res.locals.errorMessages = req.flash('error');
+  next();
 });
 
-// Middlewares para parsing
-app.use(bodyParser.json());
-app.use(bodyParser.urlencoded({ extended: true }));
+// -----------------------------------
+// Rutas
+// -----------------------------------
 
-// Sirve archivos estáticos del frontend
-app.use(express.static(path.join(__dirname, '../frontend')));
-
-// Ruta para la raíz
+// Página principal
 app.get('/', (req, res) => {
   res.sendFile(path.join(__dirname, '../frontend', 'index.html'));
 });
 
 // Rutas API
-app.use('/api', require('./routes/usuarioRoutes'));
-app.use('/auth', require('./routes/authRoutes'));
-app.use('/auth', require('./routes/voluntarioRoutes'));
-app.use('/auth', require('./routes/reporteRoutes'));
-app.use('/auth', require('./routes/inventarioRoutes'));
+app.use('/api/usuarios', require('./routes/usuarioRoutes'));
+app.use('/api/mascotas', require('./routes/mascotaRoutes'));
+app.use('/api/campanias', require('./routes/campaniaRoutes'));
+app.use('/api/voluntarios', require('./routes/voluntarioRoutes'));
+app.use('/api/reportes', require('./routes/reporteRoutes'));
+app.use('/api/inventarios', require('./routes/inventarioRoutes'));
+app.use('/api/eventos', require('./routes/eventoRoutes'));
 
-// Inicia el servidor
+
+
+// Otras rutas
+app.use('/auth', require('./routes/authRoutes'));
+app.use('/api/auth', require('./routes/authRoutes'));
+app.use(express.static('public'));
+
+// Archivos estáticos del frontend
+app.use(express.static(path.join(__dirname, "../frontend")));
+
+// -----------------------------------
+// Inicio del servidor
+// -----------------------------------
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => {
   console.log(`✅ Servidor corriendo en http://localhost:${PORT}`);

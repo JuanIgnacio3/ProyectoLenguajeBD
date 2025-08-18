@@ -20,5 +20,7 @@ router.post('/login', [
 // Logout (opcional si manejas sesiones JWT)
 router.get('/logout', authController.logout);
 
-
+router.get('/', (req, res) => {
+    res.send('Ruta de login, usar POST para autenticar');
+});
 module.exports = router;

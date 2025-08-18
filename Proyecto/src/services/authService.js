@@ -1,5 +1,6 @@
 const bcrypt = require('bcrypt');
 const Usuario = require('../models/usuario');
+const { getConnection, closeConnection } = require('../config/db');
 
 class AuthService {
     // Registrar usuario

@@ -21,21 +21,20 @@
                     <li><a href="index.html">Inicio</a></li>
                     <li><a href="mascotas.html">Mascotas</a></li>
                     <li><a href="eventos.html">Eventos</a></li>
-                    <li><a href="campanias.html" class="active">Campañas</a></li>
-                                        <li><a href="inventarios.html" class="active">Inventarios</a></li>
-                              <li><a href="voluntarios.html">Voluntarios</a></li>
-
-
+                    <li><a href="campanias.html">Campañas</a></li>
+                    <li><a href="inventarios.html">Inventarios</a></li>
+                    <li><a href="voluntarios.html">Voluntarios</a></li>
                     <li><a class="btn btn-primary btn-sm text-white" href="register.html">Registro</a></li>
                     <li><a class="btn btn-success btn-sm text-white" href="login.html">Login</a></li>
                 </ul>
             </nav>
         </div>
     </header>
+
     <main class="register-container">
-        <div class="auth-form">
-            <h2>Registro de Usuario</h2>
-            <form id="registerForm" onsubmit="return false;">
+        <div class="auth-form container mt-5">
+            <h2 class="text-center">Registro de Usuario</h2>
+            <form id="registerForm" onsubmit="return false;" class="mt-4">
                 <div class="form-group">
                     <label for="nombre">Nombre*</label>
                     <input type="text" class="form-control" id="nombre" name="nombre" placeholder="Ingrese su nombre"
@@ -59,95 +58,55 @@
                 <div class="form-group">
                     <label for="telefono">Teléfono*</label>
                     <input type="tel" class="form-control" id="telefono" name="telefono"
-                        placeholder="Ingrese su telefono">
+                        placeholder="Ingrese su teléfono" required>
                 </div>
                 <button type="button" id="registerButton" class="btn btn-primary btn-block">Registrarse</button>
-
             </form>
             <hr>
             <p class="text-center">¿Ya tienes una cuenta? <a href="login.html">Inicia sesión aquí</a></p>
-            <div id="registerError" class="error-message"></div>
-            <div id="registerSuccess" class="success-message"></div>
+            <div id="registerError" class="alert alert-danger mt-2 d-none"></div>
+            <div id="registerSuccess" class="alert alert-success mt-2 d-none"></div>
         </div>
     </main>
+
     <script>
-        // Función para hacer requests a la API
-        async function makeRequest(url, method = 'GET', data = null) {
-            const options = {
-                method,
-                headers: {
-                    'Content-Type': 'application/json'
-                }
+        document.getElementById("registerButton").addEventListener("click", async () => {
+            const datos = {
+                nombre: document.getElementById("nombre").value,
+                apellido: document.getElementById("apellido").value,
+                email: document.getElementById("email").value,
+                password: document.getElementById("password").value,
+                telefono: document.getElementById("telefono").value,
+                rol: 2 // 👈 valor por defecto para usuario normal
             };
 
-            if (data) {
-                options.body = JSON.stringify(data);
-            }
-
             try {
-                const response = await fetch(`http://localhost:3000/api${url}`, options);
-                return await response.json();
-            } catch (error) {
-                console.error('Error:', error);
-                throw error;
-            }
-        }
-
-        // Manejo del formulario de registro
-        document.getElementById('registerButton')?.addEventListener('click', async function (e) {
-            e.preventDefault();
-
-            const nombre = document.getElementById('nombre').value;
-            const apellido = document.getElementById('apellido').value;
-            const email = document.getElementById('email').value;
-            const password = document.getElementById('password').value;
-            const telefono = document.getElementById('telefono').value;
-
-            // Validación básica
-            if (!nombre || !apellido || !email || !password) {
-                document.getElementById('registerError').textContent = 'Todos los campos son requeridos';
-                return;
-            }
-
-            try {
-                // Mostrar estado de carga
-                const registerBtn = document.getElementById('registerButton');
-                registerBtn.disabled = true;
-                registerBtn.textContent = 'Registrando...';
-
-                const response = await makeRequest('/users', 'POST', {
-                    nombre,
-                    apellido,
-                    email,
-                    password,
-                    telefono: telefono || null,
-                    rol: 2
+                const response = await fetch("http://localhost:5000/api/usuarios/register", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify(datos)
                 });
 
-                if (response.id) { // Si el registro fue exitoso
-                    document.getElementById('registerSuccess').textContent = '¡Registro exitoso! Redirigiendo a login...';
-                    document.getElementById('registerError').textContent = '';
-                    document.getElementById('registerForm').reset();
+                const result = await response.json();
 
-                    // Redirigir automáticamente después de 2 segundos
-                    setTimeout(() => {
-                        window.location.href = 'login.html';
-                    }, 2000);
+                if (response.ok) {
+                    document.getElementById("registerSuccess").innerText = "✅ Registro exitoso";
+                    document.getElementById("registerSuccess").classList.remove("d-none");
+                    document.getElementById("registerError").classList.add("d-none");
                 } else {
-                    document.getElementById('registerError').textContent = response.error || 'Error en el registro';
+                    document.getElementById("registerError").innerText = "❌ " + (result.error || "Error en el registro");
+                    document.getElementById("registerError").classList.remove("d-none");
+                    document.getElementById("registerSuccess").classList.add("d-none");
                 }
-            } catch (error) {
-                document.getElementById('registerError').textContent = 'Error de conexión con el servidor';
-                console.error('Error:', error);
-            } finally {
-                // Restaurar estado del botón
-                const registerBtn = document.getElementById('registerButton');
-                registerBtn.disabled = false;
-                registerBtn.textContent = 'Registrarse';
+            } catch (err) {
+                document.getElementById("registerError").innerText = "⚠️ No se pudo conectar al servidor";
+                document.getElementById("registerError").classList.remove("d-none");
+                document.getElementById("registerSuccess").classList.add("d-none");
+                console.error(err);
             }
         });
-
     </script>
+
     <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@4.5.2/dist/js/bootstrap.bundle.min.js"></script>
 </body>

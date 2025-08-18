@@ -20,6 +20,7 @@ async function getConnection() {
   }
 }
 
+
 async function closeConnection(connection) {
   if (connection) {
     try {
@@ -44,5 +45,6 @@ async function getNextSeqValue(sequenceName) {
     await closeConnection(connection);
   }
 }
+
 
 module.exports = { getConnection, closeConnection, getNextSeqValue };

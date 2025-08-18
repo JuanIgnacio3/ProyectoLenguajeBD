@@ -1,103 +1,116 @@
 const usuarioService = require('../services/usuarioService');
 
 class UsuarioController {
-  // Get all users
-  async getAllUsers(req, res) {
+  async create(req, res) {
     try {
-      const users = await usuarioService.getAllUsers();
-      res.status(200).json(users);
+      req.body.rol = Number(req.body.rol); // convertir a número
+      const usuario = await usuarioService.createUser(req.body);
+      res.status(201).json(usuario);
     } catch (error) {
       res.status(400).json({ error: error.message });
     }
   }
 
-  // Get user by id
-  async getUserById(req, res) {
+  async getAll(req, res) {
     try {
-      const user = await usuarioService.getUserById(req.params.id);
-      if (user) {
-        res.status(200).json(user);
-      } else {
-        res.status(404).json({ error: 'Usuario no encontrado' });
-      }
+      const usuarios = await usuarioService.getAllUsers();
+      res.json(usuarios);
+    } catch (error) {
+      res.status(500).json({ error: error.message });
+    }
+  }
+
+  
+  async getAllRoles(req, res) {
+    try {
+      const usuarios = await usuarioService.getAllRoles();
+      res.json(usuarios);
+    } catch (error) {
+      res.status(500).json({ error: error.message });
+    }
+  }
+
+  async getById(req, res) {
+    try {
+      const id = Number(req.params.id);
+      if (isNaN(id)) return res.status(400).json({ error: "ID inválido" });
+      const usuario = await usuarioService.getUserById(id);
+      if (!usuario) return res.status(404).json({ error: "Usuario no encontrado" });
+      res.json(usuario);
+    } catch (error) {
+      res.status(500).json({ error: error.message });
+    }
+  }
+
+  async search(req, res) {
+    try {
+      const usuarios = await usuarioService.searchUserByNameOrLast(req.query.q || "");
+      res.json(usuarios);
+    } catch (error) {
+      res.status(500).json({ error: error.message });
+    }
+  }
+
+  async update(req, res) {
+    try {
+      const id = Number(req.params.id);
+      if (isNaN(id)) return res.status(400).json({ error: "ID inválido" });
+      req.body.rol = Number(req.body.rol); // convertir a número
+      const usuario = await usuarioService.updateUser(id, req.body);
+      if (!usuario) return res.status(404).json({ error: "Usuario no encontrado" });
+      res.json(usuario);
     } catch (error) {
       res.status(400).json({ error: error.message });
     }
   }
 
-  // Get user by email
-  async getUserByEmail(req, res) {
+  async delete(req, res) {
     try {
-      const user = await usuarioService.getUserByEmail(req.params.email);
-      if (user) {
-        res.status(200).json(user);
-      } else {
-        res.status(404).json({ error: 'Usuario no encontrado' });
-      }
+      const id = Number(req.params.id);
+      if (isNaN(id)) return res.status(400).json({ error: "ID inválido" });
+      const deleted = await usuarioService.deleteUser(id);
+      if (!deleted) return res.status(404).json({ error: "Usuario no encontrado" });
+      res.json({ message: "Usuario eliminado correctamente" });
     } catch (error) {
-      res.status(400).json({ error: error.message });
+      res.status(500).json({ error: error.message });
     }
   }
 
-  // Search users by name
-  async searchUserByName(req, res) {
+  async login(req, res) {
     try {
-      const users = await usuarioService.searchUserByNameOrLast(req.body.search);
-      res.status(200).json(users);
+      const { email, password } = req.body;
+      const usuario = await usuarioService.authenticateUser(email, password);
+      if (!usuario) return res.status(401).json({ error: "Credenciales inválidas" });
+      res.json(usuario);
     } catch (error) {
-      res.status(400).json({ error: error.message });
+      res.status(500).json({ error: error.message });
     }
   }
 
-  // Create user
-  async createUser(req, res) {
+   async getNombreCompleto(req, res) {
     try {
-      const user = await usuarioService.createUser(req.body);
-      res.status(201).json(user);
+      const nombre = await usuarioService.getNombreCompleto(req.params.id);
+      res.status(200).json({ nombre });
     } catch (error) {
-      res.status(400).json({ error: error.message });
+      res.status(500).json({ error: error.message });
     }
   }
 
-  // Update user
-  async updateUser(req, res) {
+  async emailValido(req, res) {
     try {
-      const user = await usuarioService.updateUser(req.params.id, req.body);
-      if (user) {
-        res.status(200).json(user);
-      } else {
-        res.status(404).json({ error: 'Usuario no encontrado' });
-      }
+      const valido = await usuarioService.emailValido(req.params.email);
+      res.status(200).json({ valido });
     } catch (error) {
-      res.status(400).json({ error: error.message });
+      res.status(500).json({ error: error.message });
     }
   }
 
-  // Delete user
-  async deleteUser(req, res) {
+  async normalizarTelefono(req, res) {
     try {
-      const success = await usuarioService.deleteUser(req.params.id);
-      if (success) {
-        res.status(200).json({ message: 'Usuario eliminado correctamente' });
-      } else {
-        res.status(404).json({ error: 'Usuario no encontrado' });
-      }
+      const telefono = await usuarioService.normalizarTelefono(req.params.tel);
+      res.status(200).json({ telefono });
     } catch (error) {
-      res.status(400).json({ error: error.message });
-    }
-  }
-
-  // Authenticate user
-  async authenticateUser(req, res) {
-    try {
-      const user = await usuarioService.authenticateUser(req.body.email, req.body.password);
-      if (user) {
-        res.status(200).json(user);
-      } else {
-        res.status(401).json({ error: 'Credenciales inválidas' });
-      }
-    } catch (error) {
-      res.status(400).json({ error: error.message });
+      res.status(500).json({ error: error.message });
     }
   }
 }

@@ -1,20 +1,23 @@
 const oracledb = require('oracledb');
+const { getConnection, closeConnection } = require('./db'); // Ajusta la ruta si es necesario
 
-(async () => {
-    try {
-        const conn = await oracledb.getConnection({
-            user: 'admin_Proyecto',                  // Usuario de ejemplo
-            password: '12345',              // Contraseña por defecto del esquema HR
-            connectString: 'localhost:1521/pdb_DejandoHuella' // Cambia según tu host, puerto y servicio
-        });
-        console.log('✅ Conexión exitosa con Admin_Proyecto');
-        
-        // Ejemplo: ejecutar un query simple
-        const result = await conn.execute(`SELECT * FROM Usuarios`);
-        console.log(result.rows);
+async function testMascotas() {
+  let connection;
+  try {
+    connection = await getConnection();
 
-        await conn.close();
-    } catch (err) {
-        console.error('❌ Error:', err);
-    }
-})();
+    const sql = `SELECT id, nombre, raza, edad, descripcion, foto, estado, usuario FROM Mascotas`;
+    console.log('Ejecutando query:', sql);
+
+    const result = await connection.execute(sql, [], { outFormat: oracledb.OUT_FORMAT_OBJECT });
+
+    console.log('Filas obtenidas:', result.rows.length);
+    console.log('Primeras filas:', result.rows.slice(0, 5));
+  } catch (err) {
+    console.error('Error ejecutando query de prueba:', err);
+  } finally {
+    await closeConnection(connection);
+  }
+}
+
+testMascotas();
