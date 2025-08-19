@@ -25,7 +25,6 @@
                     <li><a href="inventarios.html">Inventarios</a></li>
                     <li><a href="voluntarios.html" class="active">Voluntarios</a></li>
                     <li><a class="btn btn-primary btn-sm text-white" href="register.html">Registro</a></li>
-                    <li><a class="btn btn-success btn-sm text-white" href="login.html">Login</a></li>
                 </ul>
             </nav>
         </div>
@@ -71,18 +70,19 @@
 
    <script>
     // Cargar usuarios en el select
-    fetch('/api/usuarios')
-        .then(res => res.json())
-        .then(usuarios => {
-            const select = document.querySelector('#usuario');
-            usuarios.forEach(u => {
-                const option = document.createElement('option');
-                option.value = u.id;
-                option.textContent = u.nombre;
-                select.appendChild(option);
-            });
-        })
-        .catch(err => console.error('Error al cargar usuarios:', err));
+       fetch('/api/usuarios')
+    .then(res => res.json())
+    .then(usuarios => {
+        console.log(usuarios); // para depuración
+        const select = document.querySelector('#usuario');
+        usuarios.forEach(u => {
+            const option = document.createElement('option');
+            option.value = u.ID;          // mayúscula
+            option.textContent = u.NOMBRE; // mayúscula
+            select.appendChild(option);
+        });
+    })
+    .catch(err => console.error('Error al cargar usuarios:', err));
 
     // Crear voluntario
     document.querySelector('#Button').addEventListener('click', () => {

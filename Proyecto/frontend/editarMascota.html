@@ -87,18 +87,20 @@
     console.log('ID de la mascota:', id);
 
     // Cargar usuarios en el select
-    fetch('/api/usuarios')
-        .then(res => res.json())
-        .then(usuarios => {
-            const select = document.querySelector('#usuario');
-            usuarios.forEach(u => {
-                const option = document.createElement('option');
-                option.value = u.id;
-                option.textContent = u.nombre;
-                select.appendChild(option);
-            });
-        })
-        .catch(err => console.error('Error al cargar usuarios:', err));
+      fetch('/api/usuarios')
+    .then(res => res.json())
+    .then(usuarios => {
+        console.log(usuarios); // para depuración
+        const select = document.querySelector('#usuario');
+        usuarios.forEach(u => {
+            const option = document.createElement('option');
+            option.value = u.ID;          // mayúscula
+            option.textContent = u.NOMBRE; // mayúscula
+            select.appendChild(option);
+        });
+    })
+    .catch(err => console.error('Error al cargar usuarios:', err));
+
 
     // Cargar datos de la mascota
     if (id) {
